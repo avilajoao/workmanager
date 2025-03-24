@@ -3,53 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Unyx</title>
+  <title>Unyx - Home</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
   <style>
-    /* Estilos personalizados para progress bars */
-    .progress-bar {
-      height: 6px;
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    .progress-bar > div {
-      height: 100%;
-      transition: width 0.3s ease;
-    }
-    .bg-blue-progress {
-      background-color: #2563EB;
-    }
-    .bg-orange-progress {
-      background-color: #FF9F43;
-    }
-    .bg-red-progress {
-      background-color: #EF4444;
-    }
-    .text-status {
-      font-size: 0.8rem;
-      color: #6B7280;
-    }
-
-    /* Animação suave para a barra de pesquisa */
-    .search-input {
-      transition: width 0.3s ease, opacity 0.3s ease;
-    }
-    .search-input.collapsed {
-      width: 0;
-      opacity: 0;
-      padding: 0;
-    }
-
-    /* Barra lateral */
-    .sidebar {
-      transition: transform 0.3s ease;
-      z-index: 20;
-    }
-    .sidebar.collapsed {
-      transform: translateX(-100%);
-    }
-
     /* Tema escuro */
     body.dark {
       background-color: #1a202c;
@@ -105,14 +62,6 @@
     .dark .menu-tab {
       background-color: #2d3748;
       border-color: #4a5568;
-    }
-
-    /* Centralizar conteúdo */
-    .content-center {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
     }
 
     /* Ajustar bordas das páginas */
@@ -225,6 +174,12 @@
           />
         </div>
       </header>
+
+      <!-- Conteúdo da Home -->
+      <div class="p-4">
+        <h2 class="text-2xl font-bold mb-4">Bem-vindo ao Unyx Gerenciamento de Obras</h2>
+        <p class="mb-4">Escolha uma das opções no menu lateral para começar.</p>
+      </div>
     </div>
   </div>
 

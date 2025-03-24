@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Unyx</title>
+  <title>Unyx - Obras</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
   <style>
@@ -107,14 +107,6 @@
       border-color: #4a5568;
     }
 
-    /* Centralizar conteúdo */
-    .content-center {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-    }
-
     /* Ajustar bordas das páginas */
     .page-content {
       margin: 0 2rem;
@@ -129,10 +121,10 @@
       :class="['w-64 bg-white shadow-md p-4 fixed top-0 left-0 h-full sidebar dark:bg-gray-800', isSidebarExpanded ? '' : 'collapsed']"
     >
       <div class="flex flex-col space-y-4">
-        <button @click="navigateTo('obras.html')" :class="['px-4 py-2 rounded', currentView === 'obras' ? 'bg-orange-500 text-white' : 'bg-gray-300 text-gray-600 dark:bg-gray-700 dark:text-white']">
+        <button @click="currentView = 'obras'; toggleSidebar()" :class="['px-4 py-2 rounded', currentView === 'obras' ? 'bg-orange-500 text-white' : 'bg-gray-300 text-gray-600 dark:bg-gray-700 dark:text-white']">
           O. Ativas
         </button>
-        <button @click="navigateTo('dashboard.html')" :class="['px-4 py-2 rounded', currentView === 'dashboard' ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600 dark:bg-gray-700 dark:text-white']">
+        <button @click="currentView = 'dashboard'; toggleSidebar()" :class="['px-4 py-2 rounded', currentView === 'dashboard' ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600 dark:bg-gray-700 dark:text-white']">
           Dashboard
         </button>
       </div>
@@ -225,23 +217,121 @@
           />
         </div>
       </header>
+
+      <!-- Tabela de Obras Simplificada -->
+      <div v-if="currentView === 'obras'" class="overflow-x-auto p-4">
+        <table class="w-full table-auto border-collapse bg-white dark:bg-gray-800 dark:text-white">
+          <thead class="bg-gray-200 dark:bg-gray-700">
+            <tr>
+              <th class="px-4 py-2 border dark:border-gray-600">Responsável técnico</th>
+              <th class="px-4 py-2 border dark:border-gray-600">Encarregado</th>
+              <th class="px-4 py-2 border dark:border-gray-600">Obra</th>
+              <th class="px-4 py-2 border dark:border-gray-600">Previsão de entrega</th>
+              <th class="px-4 py-2 border dark:border-gray-600">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="obra in filteredObras" :key="obra.id" class="border-b dark:border-gray-600">
+              <td class="px-4 py-2 border dark:border-gray-600">
+                <span :class="['inline-block text-white rounded-full px-2 py-1', obra.responsavel === 'Igor' ? 'bg-yellow-500' : 'bg-orange-500']">
+                  {{ obra.responsavel }}
+                </span>
+              </td>
+              <td class="px-4 py-2 border dark:border-gray-600">
+                <span :class="['inline-block text-white rounded-full px-2 py-1', obra.manager === 'Marcos' ? 'bg-orange-500' : 'bg-yellow-500']">
+                  {{ obra.manager }}
+                </span>
+              </td>
+              <td class="px-4 py-2 border dark:border-gray-600">
+                <p class="font-bold">{{ obra.nome }}</p>
+              </td>
+              <td class="px-4 py-2 border dark:border-gray-600">{{ obra.termino }}</td>
+              <td class="px-4 py-2 border flex space-x-2 dark:border-gray-600">
+                <button @click="showDetails(obra)" class="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600">
+                  Detalhes
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Botão Alternar entre Ativas e Inativas -->
+        <div class="mt-4 flex justify-center">
+          <button @click="toggleActiveInactive" class="px-4 py-2 bg-gray-300 text-gray-600 rounded hover:bg-gray-400 dark:bg-gray-700 dark:text-white">
+            {{ filterStatus === 'active' ? 'Mostrar Obras Inativas' : 'Mostrar Obras Ativas' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Página de Detalhes da Obra -->
+      <div v-if="currentView === 'detalhes'" class="p-4">
+        <button @click="currentView = 'obras'" class="mb-4 bg-gray-300 text-gray-600 px-4 py-2 rounded hover:bg-gray-400 dark:bg-gray-700 dark:text-white">Voltar</button>
+        <div class="bg-white p-6 rounded shadow-lg dark:bg-gray-800 dark:text-white">
+          <h2 class="text-2xl font-bold mb-4">Detalhes da Obra</h2>
+          <p><strong>Nome:</strong> {{ selectedObra.nome }}</p>
+          <p><strong>Responsável Técnico:</strong> {{ selectedObra.responsavel }}</p>
+          <p><strong>Encarregado:</strong> {{ selectedObra.manager }}</p>
+          <p><strong>Previsão de Entrega:</strong> {{ selectedObra.termino }}</p>
+          <p><strong>Status:</strong> {{ selectedObra.status }}</p>
+          <p><strong>Valor:</strong> R$ {{ selectedObra.valor }}</p>
+          <div class="progress-bar bg-gray-200 dark:bg-gray-700 mt-4">
+            <div :class="['bg-blue-progress', { 'bg-orange-progress': selectedObra.status === 'inactive' }]" :style="{ width: selectedObra.progress + '%' }"></div>
+          </div>
+          <h3 class="text-xl font-bold mt-4">Equipe Envolvida</h3>
+          <ul>
+            <li v-for="member in selectedObra.team" :key="member.nome" class="mt-2">
+              <strong>{{ member.nome }}</strong> - {{ member.role }}
+            </li>
+          </ul>
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
-    const { createApp, ref } = Vue;
+    const { createApp, ref, computed } = Vue;
 
     createApp({
       setup() {
+        // Dados das obras
+        const obras = ref([]);
+        const profissionais = ref({});
+        const times = ref([]);
+
+        // Carregar dados do JSON
+        fetch('obras.json')
+          .then(response => response.json())
+          .then(data => {
+            obras.value = data.obras;
+            profissionais.value = data.profissionais;
+            times.value = data.times;
+          });
+
+        // Filtros e busca
+        const searchQuery = ref('');
+        const filterStatus = ref('active'); // 'active' ou 'inactive'
+        const currentView = ref('obras'); // 'obras' ou 'dashboard'
         const isSidebarExpanded = ref(false); // Controla se a barra lateral está expandida
         const isSearchExpanded = ref(false); // Controla se a barra de pesquisa está expandida
         const isDarkMode = ref(localStorage.getItem('isDarkMode') === 'true'); // Estado do tema escuro
-        const searchQuery = ref(''); // Campo de busca
+        const selectedObra = ref(null); // Obra selecionada para exibir detalhes
 
         // Aplicar o tema salvo ao carregar a página
         if (isDarkMode.value) {
           document.body.classList.add('dark');
         }
+
+        // Filtragem
+        const filteredObras = computed(() => {
+          return obras.value
+            .filter(obra => obra.status === filterStatus.value) // Filtra por status (ativa ou inativa)
+            .filter(obra => obra.nome.toLowerCase().includes(searchQuery.value.toLowerCase()));
+        });
+
+        // Função para alternar entre obras ativas e inativas
+        const toggleActiveInactive = () => {
+          filterStatus.value = filterStatus.value === 'active' ? 'inactive' : 'active';
+        };
 
         // Função para expandir/recolher a barra lateral
         const toggleSidebar = () => {
@@ -265,21 +355,37 @@
           document.body.classList.toggle('dark', isDarkMode.value);
         };
 
-        // Função para navegar para outra página
-        const navigateTo = (page) => {
-          window.location.href = page;
+        // Função para exibir detalhes da obra
+        const showDetails = (obra) => {
+          const team = times.value.find(time => time.id === obra.time).membros;
+          selectedObra.value = {
+            ...obra,
+            team: [
+              { nome: profissionais.value.pedreiros.find(p => p.id === team.pedreiro).nome, role: 'Pedreiro' },
+              ...team.ajudantes.map(id => ({ nome: profissionais.value.ajudantes.find(a => a.id === id).nome, role: 'Ajudante' })),
+              { nome: profissionais.value.eletricistas.find(e => e.id === team.eletricista).nome, role: 'Eletricista' },
+              { nome: profissionais.value.ajudantes_eletricos.find(ae => ae.id === team.ajudante_eletrico).nome, role: 'Ajudante Elétrico' }
+            ]
+          };
+          currentView.value = 'detalhes';
         };
 
         return {
+          obras,
+          searchQuery,
+          filterStatus,
+          filteredObras,
+          currentView,
           isSidebarExpanded,
           isSearchExpanded,
           isDarkMode,
-          searchQuery,
+          selectedObra,
+          toggleActiveInactive,
           toggleSidebar,
           toggleSearch,
           collapseSearch,
           toggleDarkMode,
-          navigateTo,
+          showDetails,
         };
       },
     }).mount('#app');
