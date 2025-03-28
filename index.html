@@ -6,283 +6,100 @@
   <title>Unyx</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
-  <style>
-    /* Estilos personalizados para progress bars */
-    .progress-bar {
-      height: 6px;
-      border-radius: 4px;
-      overflow: hidden;
-    }
-    .progress-bar > div {
-      height: 100%;
-      transition: width 0.3s ease;
-    }
-    .bg-blue-progress {
-      background-color: #2563EB;
-    }
-    .bg-orange-progress {
-      background-color: #FF9F43;
-    }
-    .bg-red-progress {
-      background-color: #EF4444;
-    }
-    .text-status {
-      font-size: 0.8rem;
-      color: #6B7280;
-    }
-
-    /* Animação suave para a barra de pesquisa */
-    .search-input {
-      transition: width 0.3s ease, opacity 0.3s ease;
-    }
-    .search-input.collapsed {
-      width: 0;
-      opacity: 0;
-      padding: 0;
-    }
-
-    /* Barra lateral */
-    .sidebar {
-      transition: transform 0.3s ease;
-      z-index: 20;
-    }
-    .sidebar.collapsed {
-      transform: translateX(-100%);
-    }
-
-    /* Tema escuro */
-    body.dark {
-      background-color: #1a202c;
-      color: #cbd5e0;
-    }
-    .dark .bg-white {
-      background-color: #2d3748;
-    }
-    .dark .text-gray-600 {
-      color: #a0aec0;
-    }
-    .dark .text-gray-800 {
-      color: #e2e8f0;
-    }
-    .dark .bg-gray-100 {
-      background-color: #2d3748;
-    }
-    .dark .bg-gray-200 {
-      background-color: #4a5568;
-    }
-    .dark .bg-gray-300 {
-      background-color: #718096;
-    }
-    .dark .bg-gray-700 {
-      background-color: #4a5568;
-    }
-    .dark .bg-gray-800 {
-      background-color: #2d3748;
-    }
-    .dark .border-gray-600 {
-      border-color: #718096;
-    }
-    .dark .text-white {
-      color: #e2e8f0;
-    }
-    .dark .border {
-      border-color: #4a5568;
-    }
-
-    /* Botão de menu como gota */
-    .menu-tab {
-      position: fixed;
-      top: 50%;
-      left: 0;
-      transform: translateY(-50%);
-      background-color: #fff;
-      border: 1px solid #ccc;
-      border-radius: 0 50% 50% 0;
-      padding: 16px;
-      cursor: pointer;
-      z-index: 30;
-    }
-    .dark .menu-tab {
-      background-color: #2d3748;
-      border-color: #4a5568;
-    }
-
-    /* Centralizar conteúdo */
-    .content-center {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-    }
-
-    /* Ajustar bordas das páginas */
-    .page-content {
-      margin: 0 2rem;
-    }
-  </style>
+  <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body class="bg-gray-100 font-sans dark:bg-gray-900 dark:text-white">
-
   <div id="app" class="flex h-screen">
     <!-- Barra Lateral -->
-    <aside
-      :class="['w-64 bg-white shadow-md p-4 fixed top-0 left-0 h-full sidebar dark:bg-gray-800', isSidebarExpanded ? '' : 'collapsed']"
-    >
+    <aside :class="['w-64 bg-white shadow-md p-4 fixed top-0 h-full sidebar dark:bg-gray-800', isSidebarOpen ? 'translate-x-0' : '-translate-x-full']">
       <div class="flex flex-col space-y-4">
-        <button @click="navigateTo('obras.html')" :class="['px-4 py-2 rounded', currentView === 'obras' ? 'bg-orange-500 text-white' : 'bg-gray-300 text-gray-600 dark:bg-gray-700 dark:text-white']">
-          O. Ativas
-        </button>
-        <button @click="navigateTo('dashboard.html')" :class="['px-4 py-2 rounded', currentView === 'dashboard' ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-600 dark:bg-gray-700 dark:text-white']">
-          Dashboard
-        </button>
+        <a href="home.html" class="px-4 py-2 rounded bg-gray-300 text-gray-600 dark:bg-gray-700 dark:text-white">Home</a>
+        <a href="dashboard.html" class="px-4 py-2 rounded bg-gray-300 text-gray-600 dark:bg-gray-700 dark:text-white">Dashboard</a>
+        <a href="dashboard.html" class="px-4 py-2 rounded bg-gray-300 text-gray-600 dark:bg-gray-700 dark:text-white">Dashboard</a>
       </div>
     </aside>
 
-    <!-- Botão de Menu -->
-    <div @click="toggleSidebar" class="menu-tab">
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        class="h-6 w-6 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="2"
-          d="M4 6h16M4 12h16M4 18h16"
-        />
-      </svg>
+    <!-- Botão de Menu -->@click="toggleSidebar">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>ay-400 dark:hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      </svg>h stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+    </div>g>
     </div>
-
     <!-- Conteúdo Principal -->
-    <div class="flex-1 transition-all duration-300 page-content">
-      <!-- Header -->
+    <div class="flex-1 transition-all duration-300 content-center page-content">
       <header class="bg-white shadow-md p-4 flex justify-between items-center dark:bg-gray-800">
-        <div class="flex items-center space-x-4">
+        <div class="flex items-center space-x-4">justify-between items-center dark:bg-gray-800">
           <h1 class="text-xl font-bold dark:text-white">Unyx Gerenciamento de Obras</h1>
-        </div>
+        </div>class="text-xl font-bold dark:text-white">Unyx Gerenciamento de Obras</h1>
         <div class="relative flex items-center space-x-4">
-          <!-- Botão de Alternância de Tema -->
           <button @click="toggleDarkMode" class="cursor-pointer">
-            <svg
-              v-if="isDarkMode"
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6 text-yellow-400 hover:text-yellow-500"
-              fill="none"
-              viewBox="0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
-              />
-            </svg>
-            <svg
-              v-else
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-6 w-6 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
-              />
-            </svg>
+            <svg v-if="isDarkMode" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400 hover:text-yellow-500" fill="none" viewBox="0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>h stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>24 24" stroke="currentColor">
+            </svg>h stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
           </button>
-
-          <!-- Ícone de lupa -->
-          <svg
-            @click="toggleSearch"
-            xmlns="http://www.w3.org/2000/svg"
-            class="h-6 w-6 cursor-pointer text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
-
-          <!-- Campo de busca -->
-          <input
-            v-model="searchQuery"
-            placeholder="Buscar por nome"
-            :class="['absolute right-0 px-4 py-2 rounded border transition-all duration-300', isSearchExpanded ? 'w-48 opacity-100' : 'w-0 opacity-0']"
-            class="bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white search-input"
-            @blur="collapseSearch"
-          />
-        </div>
+          <svg @click="toggleSearch" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 cursor-pointer text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>-800 dark:text-gray-400 dark:hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          </svg>h stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          <input v-model="searchQuery" placeholder="Buscar por nome" :class="['absolute right-0 px-4 py-2 rounded border transition-all duration-300', isSearchExpanded ? 'w-48 opacity-100' : 'w-0 opacity-0']" class="bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white search-input" @blur="collapseSearch"/>
+        </div>ut v-model="searchQuery" placeholder="Buscar por nome" :class="['absolute right-0 px-4 py-2 rounded border transition-all duration-300', isSearchExpanded ? 'w-48 opacity-100' : 'w-0 opacity-0']" class="bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white search-input" @blur="collapseSearch"/>
       </header>
-    </div>
-  </div>
-
-  <script>
-    const { createApp, ref } = Vue;
-
-    createApp({
-      setup() {
-        const isSidebarExpanded = ref(false); // Controla se a barra lateral está expandida
-        const isSearchExpanded = ref(false); // Controla se a barra de pesquisa está expandida
-        const isDarkMode = ref(localStorage.getItem('isDarkMode') === 'true'); // Estado do tema escuro
-        const searchQuery = ref(''); // Campo de busca
-
-        // Aplicar o tema salvo ao carregar a página
-        if (isDarkMode.value) {
-          document.body.classList.add('dark');
-        }
-
-        // Função para expandir/recolher a barra lateral
-        const toggleSidebar = () => {
-          isSidebarExpanded.value = !isSidebarExpanded.value;
-        };
-
-        // Função para expandir/recolher a barra de pesquisa
-        const toggleSearch = () => {
-          isSearchExpanded.value = !isSearchExpanded.value;
-        };
-
-        // Função para recolher a barra de pesquisa ao perder o foco
-        const collapseSearch = () => {
-          isSearchExpanded.value = false;
-        };
-
-        // Função para alternar entre os temas claro e escuro
-        const toggleDarkMode = () => {
-          isDarkMode.value = !isDarkMode.value;
-          localStorage.setItem('isDarkMode', isDarkMode.value);
-          document.body.classList.toggle('dark', isDarkMode.value);
-        };
-
-        // Função para navegar para outra página
-        const navigateTo = (page) => {
-          window.location.href = page;
-        };
-
+    </div>ader>
+  </div>v>
+  <script src="scripts/app.js"></script>
+  <script src="scripts/app.js"></script>
+    const app = Vue.createApp({
+      data() }{
         return {
-          isSidebarExpanded,
-          isSearchExpanded,
-          isDarkMode,
-          searchQuery,
-          toggleSidebar,
-          toggleSearch,
-          collapseSearch,
-          toggleDarkMode,
-          navigateTo,
+          isSidebarOpen: false,
+          isDarkMode: false,
+          isSearchExpanded: false,
+          searchQuery: '',
+          filterStatus: 'active',
+          obras: [
+            // Exemplo de dados
+            { id: 1, responsavel: 'Igor', manager: 'Marcos', nome: 'Obra 1', termino: '2025-04-01' },
+            { id: 2, responsavel: 'Ana', manager: 'João', nome: 'Obra 2', termino: '2025-05-15' },
+          ],
         };
       },
-    }).mount('#app');
-  </script>
-</body>
+      computed: {
+        filteredObras() {
+          return this.obras.filter((obra) =>
+            this.filterStatus === 'active' ? obra.termino >= new Date().toISOString().split('T')[0] : obra.termino < new Date().toISOString().split('T')[0]
+          );this.filterStatus === 'active' ? obra.termino >= new Date().toISOString().split('T')[0] : obra.termino < new Date().toISOString().split('T')[0]
+        },);
+      },},
+      methods: {
+        toggleSidebar() {
+          this.isSidebarOpen = !this.isSidebarOpen;
+        },this.isSidebarOpen = !this.isSidebarOpen;
+        toggleDarkMode() {
+          this.isDarkMode = !this.isDarkMode;
+          document.body.classList.toggle('dark', this.isDarkMode);
+        },document.body.classList.toggle('dark', this.isDarkMode);
+        toggleSearch() {
+          this.isSearchExpanded = !this.isSearchExpanded;
+        },this.isSearchExpanded = !this.isSearchExpanded;
+        collapseSearch() {
+          this.isSearchExpanded = false;
+        },this.isSearchExpanded = false;
+        toggleActiveInactive() {
+          this.filterStatus = this.filterStatus === 'active' ? 'inactive' : 'active';
+        },this.filterStatus = this.filterStatus === 'active' ? 'inactive' : 'active';
+        showDetails(obra) {
+          alert(`Detalhes da obra: ${obra.nome}`);
+        },alert(`Detalhes da obra: ${obra.nome}`);
+      },},
+      mounted() {
+        this.isDarkMode = document.body.classList.contains('dark');
+      },this.isDarkMode = document.body.classList.contains('dark');
+    });,
+    });
+    app.mount('#app');
+  </script>nt('#app');
+</body>ipt>
+</html>
 </html>

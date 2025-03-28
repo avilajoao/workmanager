@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalhes da Obra</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+</head>
+<body class="bg-gray-100 font-sans dark:bg-gray-900 dark:text-white">
+  <div id="app" class="p-6">
+    <h1 class="text-2xl font-bold mb-4">Detalhes da Obra</h1>
+    <div v-if="obra" class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+      <p><strong>Nome:</strong> {{ obra.nome }}</p>
+      <p><strong>Tipo:</strong> {{ obra.tipo }}</p>
+      <p><strong>Início:</strong> {{ obra.inicio }}</p>
+      <p><strong>Término:</strong> {{ obra.termino }}</p>
+      <p><strong>Responsável:</strong> {{ obra.responsavel }}</p>
+      <p><strong>Gerente:</strong> {{ obra.manager }}</p>
+      <p><strong>Time:</strong> {{ obra.time }}</p>
+    </div>
+    <div v-else>
+      <p>Carregando detalhes...</p>
+    </div>
+    <a href="obras.html" class="mt-4 inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Voltar</a>
+  </div>
+
+  <script>
+    const app = Vue.createApp({
+      data() {
+        return {
+          obra: null
+        };
+      },
+      methods: {
+        fetchObra() {
+          const params = new URLSearchParams(window.location.search);
+          const id = params.get('id');
+          fetch('obras.json')
+            .then(response => response.json())
+            .then(data => {
+              this.obra = data.obras.find(obra => obra.id == id);
+            })
+            .catch(error => console.error('Erro ao carregar detalhes da obra:', error));
+        }
+      },
+      mounted() {
+        this.fetchObra();
+      }
+    });
+
+    app.mount('#app');
+  </script>
+</body>
+</html>
