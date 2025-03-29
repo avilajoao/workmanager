@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Obras</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  <style>
+    /* Barra lateral */
+    .sidebar {
+      transition: transform 0.3s ease;
+      z-index: 20;
+    }
+    .sidebar.collapsed {
+      transform: translateX(-100%);
+    }
+
+    /* Linha de divisão mais suave no modo escuro */
+    .border-b {
+      border-bottom-width: 1px;
+    }
+    .dark .border-b {
+      border-color: rgba(255, 255, 255, 0.1); /* Linha mais suave no modo escuro */
+    }
+
+    /* Barra de progresso */
+    .progress-bar {
+      height: 6px;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .progress-bar > div {
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+    .bg-blue-progress {
+      background-color: #2563EB;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans dark:bg-gray-900 dark:text-white">
+  <div id="app" class="flex flex-col min-h-screen">
+    <!-- Barra Lateral -->
+    <aside :class="['w-64 bg-white shadow-md p-4 fixed top-0 h-full sidebar dark:bg-gray-800', isSidebarOpen ? 'translate-x-0' : '-translate-x-full']">
+      <div class="flex flex-col space-y-4">
+        <a href="home.html" class="px-4 py-2 rounded bg-gray-300 text-gray-600 dark:bg-gray-700 dark:text-white border-2 border-gray-400 dark:border-gray-600">Home</a>
+        <a href="index.html" class="px-4 py-2 rounded bg-gray-300 text-gray-600 dark:bg-gray-700 dark:text-white border-2 border-gray-400 dark:border-gray-600">Início</a>
+        <a href="dashboard.html" class="px-4 py-2 rounded bg-gray-300 text-gray-600 dark:bg-gray-700 dark:text-white border-2 border-gray-400 dark:border-gray-600">Dashboard</a>
+      </div>
+    </aside>
+
+    <!-- Botão de menu tipo gota -->
+    <div :class="['fixed top-1/2 transform -translate-y-1/2 z-30 transition-transform', isSidebarOpen ? 'translate-x-64' : 'translate-x-0']">
+      <button @click="toggleSidebar" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-r-full shadow-md">
+        ☰
+      </button>
+    </div>
+
+    <!-- Cabeçalho -->
+    <header class="bg-white shadow-md px-6 py-4 flex justify-between items-center dark:bg-gray-800 border-b-4 border-gray-300 dark:border-gray-700">
+      <h1 class="text-xl font-bold dark:text-white">Obras</h1>
+      <div class="flex items-center space-x-4">
+        <!-- Botão de alternância de tema -->
+        <button @click="toggleDarkMode" class="cursor-pointer" aria-label="Alternar tema">
+          <svg v-if="isDarkMode" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-400 hover:text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+          <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main class="flex-1 p-6">
+      <!-- Botão para alternar entre obras ativas e inativas -->
+      <div class="mb-4">
+        <button
+          @click="alternarObras"
+          class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+        >
+          {{ exibirAtivas ? 'Mostrar Obras Inativas' : 'Mostrar Obras Ativas' }}
+        </button>
+      </div>
+
+      <!-- Tabela de Obras -->
+      <div class="overflow-x-auto">
+        <table class="min-w-full bg-white dark:bg-gray-800 rounded-lg shadow-md">
+          <thead>
+            <tr>
+              <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-300">Responsável técnico</th>
+              <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-300">Encarregado</th>
+              <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-300">Obra</th>
+              <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-300">Previsão de entrega</th>
+              <th class="px-4 py-2 text-left text-gray-600 dark:text-gray-300">Detalhes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="obra in obrasFiltradas" :key="obra.id" class="border-b dark:border-gray-700">
+              <td class="px-4 py-2 text-gray-800 dark:text-gray-200">{{ obra.responsavel }}</td>
+              <td class="px-4 py-2 text-gray-800 dark:text-gray-200">{{ obra.manager }}</td>
+              <td class="px-4 py-2 text-gray-800 dark:text-gray-200">{{ obra.nome }}</td>
+              <td class="px-4 py-2 text-gray-800 dark:text-gray-200">{{ obra.termino }}</td>
+              <td class="px-4 py-2 text-gray-800 dark:text-gray-200">
+                <div class="flex items-center space-x-2">
+                  <!-- Botão de Detalhes -->
+                  <a :href="'detalhes.html?id=' + obra.id" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded">
+                    Detalhes
+                  </a>
+                  <!-- Barra de Progresso -->
+                  <div
+                    class="progress-bar bg-gray-200 w-24 h-2 rounded"
+                    :class="{
+                      'bg-green-500': obra.progresso >= 75,
+                      'bg-yellow-500': obra.progresso >= 50 && obra.progresso < 75,
+                      'bg-red-500': obra.progresso < 50
+                    }"
+                    :style="{ width: obra.progresso + '%' }"
+                  ></div>
+                  <span class="text-sm text-gray-600 dark:text-gray-400">{{ obra.progresso }}%</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div> <!-- Fecha o contêiner Vue.js -->
+  <script>
+    const app = Vue.createApp({
+      data() {
+        return {
+          isSidebarOpen: false, // Controle da barra lateral
+          isDarkMode: false, // Controle do tema claro/escuro
+          obras: [], // Todas as obras carregadas do JSON
+          exibirAtivas: true // Define se estamos exibindo obras ativas ou inativas
+        };
+      },
+      computed: {
+        obrasFiltradas() {
+          const hoje = new Date().toISOString().split('T')[0];
+          return this.obras.filter(obra => {
+            const isAtiva = obra.termino && obra.termino >= hoje;
+            return this.exibirAtivas ? isAtiva : !isAtiva;
+          });
+        }
+      },
+      methods: {
+        toggleSidebar() {
+          this.isSidebarOpen = !this.isSidebarOpen;
+        },
+        toggleDarkMode() {
+          this.isDarkMode = !this.isDarkMode; // Alterna o estado do tema
+          if (this.isDarkMode) {
+            document.body.classList.add('dark'); // Adiciona a classe 'dark' para o tema escuro
+          } else {
+            document.body.classList.remove('dark'); // Remove a classe 'dark' para o tema claro
+          }
+          localStorage.setItem('darkMode', this.isDarkMode); // Salva o estado no localStorage
+        },
+        fetchObras() {
+          // Busca os dados do arquivo obras.json
+          fetch('obras.json')
+            .then(response => response.json())
+            .then(data => {
+              // Adiciona um campo de progresso fictício para cada obra
+              this.obras = data.obras.map(obra => ({
+                ...obra,
+                progresso: Math.floor(Math.random() * 101) // Progresso entre 0% e 100%
+              }));
+            })
+            .catch(error => console.error('Erro ao carregar obras:', error));
+        },
+        alternarObras() {
+          this.exibirAtivas = !this.exibirAtivas;
+        }
+      },
+      mounted() {
+        const savedTheme = localStorage.getItem('darkMode') === 'true'; // Recupera o estado salvo
+        this.isDarkMode = savedTheme; // Define o estado inicial
+        if (this.isDarkMode) {
+          document.body.classList.add('dark'); // Aplica o tema escuro
+        } else {
+          document.body.classList.remove('dark'); // Aplica o tema claro
+        }
+        this.fetchObras(); // Carrega as obras
+      }
+    });
+
+    app.mount('#app');
+  </script>
+</body>
+</html>
