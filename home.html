@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel - Construtora</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Adicionar Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#8B5CF6",
+                        darkBg: "#121212",
+                        darkPanel: "#1E1E1E",
+                        darkBorder: "#292929",
+                        grayText: "#A1A1A1",
+                        lightBg: "#F5F5F5",
+                        lightPanel: "#FFFFFF",
+                        lightText: "#333333",
+                        lightBorder: "#DDDDDD"
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        .sidebar {
+            width: 4rem;
+            transition: width 0.3s ease;
+        }
+        .sidebar.expanded {
+            width: 12rem;
+        }
+        .sidebar.expanded .sidebar-link {
+            justify-content: flex-start;
+            padding-left: 1.5rem;
+        }
+        .sidebar.expanded .sidebar-text {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-darkBg text-white font-sans transition-all duration-300">
+
+    <!-- Container Principal -->
+    <div class="flex h-screen">
+
+        <!-- Sidebar -->
+        <aside class="sidebar flex flex-col items-center py-6 border-r transition-colors duration-300">
+            <button id="toggleSidebar" class="text-grayText hover:text-white mb-6">
+                <i class="ph ph-list text-xl"></i>
+            </button>
+            <nav class="flex flex-col space-y-6 w-full">
+                <a href="#" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
+                    <i class="ph ph-house text-xl"></i>
+                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Início</span>
+                </a>
+                <a href="#" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
+                    <i class="ph ph-chart-bar text-xl"></i>
+                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Dashboard</span>
+                </a>
+                <a href="#" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
+                    <i class="ph ph-kanban text-xl"></i>
+                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Backlog</span>
+                </a>
+                <a href="#" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
+                    <i class="ph ph-calendar text-xl"></i>
+                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Agenda</span>
+                </a>
+                <a href="#" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
+                    <i class="ph ph-chart-line text-xl"></i>
+                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Relatórios</span>
+                </a>
+                <a href="#" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
+                    <i class="ph ph-gear text-xl"></i>
+                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Configurações</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="flex-1 p-8">
+
+            <!-- Header -->
+            <header class="flex justify-between items-center mb-6">
+                <h1 class="text-3xl font-semibold">Bom dia, João</h1>
+                <button id="toggleDarkMode" class="bg-transparent">
+                    <i class="ph ph-moon text-xl"></i>
+                </button>
+            </header>
+
+            <!-- Área de Painéis -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <!-- Agenda -->
+                <section class="panel p-6 rounded-lg border bg-darkPanel border-darkBorder">
+                    <div class="flex items-center mb-2">
+                        <i class="ph ph-calendar mr-2 text-xl"></i>
+                        <h2 class="text-xl font-semibold">Agenda</h2>
+                    </div>
+                    <p class="text-grayText" id="current-date"></p>
+                    <button class="mt-4 bg-primary px-4 py-2 rounded-lg text-white hover:bg-purple-600 flex items-center">
+                        <i class="ph ph-plus mr-2"></i> Adicionar ao calendário
+                    </button>
+                </section>
+
+                <!-- Lista de Tarefas -->
+                <section class="panel p-6 rounded-lg border bg-darkPanel border-darkBorder">
+                    <div class="flex items-center mb-4">
+                        <i class="ph ph-check-square mr-2 text-xl"></i>
+                        <h2 class="text-xl font-semibold">Lista de Tarefas</h2>
+                    </div>
+                    <ul class="space-y-3">
+                        <li class="flex items-center">
+                            <input type="checkbox" class="mr-3 w-5 h-5 task" data-task="leads">
+                            <span>Captar e qualificar leads</span>
+                        </li>
+                        <li class="flex items-center">
+                            <input type="checkbox" class="mr-3 w-5 h-5 task" data-task="backlog">
+                            <span>Criar lista 'Backlog Construtora'</span>
+                        </li>
+                        <li class="flex items-center">
+                            <input type="checkbox" class="mr-3 w-5 h-5 task" data-task="pesquisa">
+                            <span>Filtros e Pesquisa</span>
+                        </li>
+                    </ul>
+                </section>
+
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        const body = document.body;
+        const darkModeToggle = document.getElementById('toggleDarkMode');
+        const darkModeIcon = darkModeToggle.querySelector('i');
+
+        // Carregar tema salvo
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        applyTheme(savedTheme);
+
+        darkModeToggle.addEventListener('click', () => {
+            const newTheme = body.classList.contains('bg-darkBg') ? 'light' : 'dark';
+            applyTheme(newTheme);
+        });
+
+        function applyTheme(theme) {
+            if (theme === 'light') {
+                body.classList.remove('bg-darkBg', 'text-white');
+                body.classList.add('bg-lightBg', 'text-lightText');
+
+                document.querySelectorAll('.panel').forEach(panel => {
+                    panel.classList.remove('bg-darkPanel', 'border-darkBorder');
+                    panel.classList.add('bg-lightPanel', 'border-lightBorder');
+                });
+
+                // Atualizar a barra lateral para o tema claro
+                const sidebar = document.querySelector('.sidebar');
+                sidebar.classList.remove('bg-darkPanel', 'border-darkBorder');
+                sidebar.classList.add('bg-lightPanel', 'border-lightBorder');
+
+                // Atualizar links da barra lateral
+                document.querySelectorAll('.sidebar-link').forEach(link => {
+                    link.classList.remove('hover:text-white');
+                    link.classList.add('hover:text-lightText');
+                });
+
+                darkModeIcon.classList.remove('ph-moon');
+                darkModeIcon.classList.add('ph-sun');
+            } else {
+                body.classList.remove('bg-lightBg', 'text-lightText');
+                body.classList.add('bg-darkBg', 'text-white');
+
+                document.querySelectorAll('.panel').forEach(panel => {
+                    panel.classList.remove('bg-lightPanel', 'border-lightBorder');
+                    panel.classList.add('bg-darkPanel', 'border-darkBorder');
+                });
+
+                // Atualizar a barra lateral para o tema escuro
+                const sidebar = document.querySelector('.sidebar');
+                sidebar.classList.remove('bg-lightPanel', 'border-lightBorder');
+                sidebar.classList.add('bg-darkPanel', 'border-darkBorder');
+
+                // Atualizar links da barra lateral
+                document.querySelectorAll('.sidebar-link').forEach(link => {
+                    link.classList.remove('hover:text-lightText');
+                    link.classList.add('hover:text-white');
+                });
+
+                darkModeIcon.classList.remove('ph-sun');
+                darkModeIcon.classList.add('ph-moon');
+            }
+
+            localStorage.setItem('theme', theme);
+        }
+
+        // Sidebar Toggle
+        document.getElementById('toggleSidebar').addEventListener('click', () => {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('expanded');
+        });
+
+        // Salvar Status das Tarefas no LocalStorage
+        document.querySelectorAll('.task').forEach(task => {
+            const taskId = task.dataset.task;
+            task.checked = localStorage.getItem(taskId) === 'true';
+
+            task.addEventListener('change', () => {
+                localStorage.setItem(taskId, task.checked);
+            });
+        });
+
+        // Atualizar a data atual
+        function updateCurrentDate() {
+            const dateElement = document.getElementById('current-date');
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const today = new Date();
+            
+            // Formatar a data em português do Brasil
+            const formattedDate = today.toLocaleDateString('pt-BR', options);
+            
+            // Capitalizar a primeira letra
+            const capitalizedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+            
+            dateElement.textContent = capitalizedDate;
+        }
+
+        // Chamar a função quando a página carregar
+        document.addEventListener('DOMContentLoaded', updateCurrentDate);
+    </script>
+
+</body>
+</html>
