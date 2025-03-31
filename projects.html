@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Projetos - Construtora</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#8B5CF6",
+                        darkBg: "#121212",
+                        darkPanel: "#1E1E1E",
+                        darkBorder: "#292929",
+                        grayText: "#A1A1A1",
+                        lightBg: "#F5F5F5",
+                        lightPanel: "#FFFFFF",
+                        lightText: "#333333",
+                        lightBorder: "#DDDDDD"
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        .sidebar {
+            width: 4rem;
+            transition: width 0.3s ease;
+        }
+        .sidebar.expanded {
+            width: 12rem;
+        }
+        .sidebar.expanded .sidebar-link {
+            justify-content: flex-start;
+            padding-left: 1.5rem;
+        }
+        .sidebar.expanded .sidebar-text {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-darkBg text-white font-sans transition-all duration-300">
+
+    <!-- Container Principal -->
+    <div class="flex h-screen">
+
+        <!-- Sidebar -->
+        <aside class="sidebar flex flex-col items-center py-6 border-r transition-colors duration-300 bg-darkPanel border-darkBorder">
+            <button id="toggleSidebar" class="text-grayText hover:text-white mb-6">
+                <i class="ph ph-list text-xl"></i>
+            </button>
+            <nav class="flex flex-col space-y-6 w-full">
+                <a href="home.html" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
+                    <i class="ph ph-house text-xl"></i>
+                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Início</span>
+                </a>
+                <a href="dashboard.html" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
+                    <i class="ph ph-chart-bar text-xl"></i>
+                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Dashboard</span>
+                </a>
+                <a href="backlog.html" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
+                    <i class="ph ph-kanban text-xl"></i>
+                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Backlog</span>
+                </a>
+                <a href="projects.html" class="text-primary hover:text-white flex items-center justify-center sidebar-link">
+                    <i class="ph ph-buildings text-xl"></i>
+                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Projetos</span>
+                </a>
+                <a href="#" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
+                    <i class="ph ph-calendar text-xl"></i>
+                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Agenda</span>
+                </a>
+                <a href="#" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
+                    <i class="ph ph-gear text-xl"></i>
+                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Configurações</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="flex-1 p-8 overflow-y-auto">
+
+            <!-- Header -->
+            <header class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-3xl font-semibold">Gerenciar Projetos</h1>
+                    <p class="text-grayText" id="current-date"></p>
+                </div>
+                <div class="flex space-x-4">
+                    <button id="newProjectBtn" class="bg-primary hover:bg-purple-700 px-4 py-2 rounded-lg flex items-center">
+                        <i class="ph ph-plus mr-2"></i> Novo Projeto
+                    </button>
+                    <button id="toggleDarkMode" class="bg-transparent">
+                        <i class="ph ph-moon text-xl"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Lista de Projetos -->
+            <div class="panel p-6 rounded-lg border bg-darkPanel border-darkBorder mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold">Projetos</h2>
+                    <div class="flex space-x-2">
+                        <div class="relative">
+                            <input type="text" id="searchProjects" placeholder="Buscar projetos..." class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-primary">
+                            <i class="ph ph-magnifying-glass absolute left-3 top-3 text-grayText"></i>
+                        </div>
+                        <select id="filterStatus" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="">Todos os status</option>
+                            <option value="Em andamento">Em andamento</option>
+                            <option value="Planejamento">Planejamento</option>
+                            <option value="Atrasado">Atrasado</option>
+                            <option value="Concluído">Concluído</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-grayText border-b border-darkBorder">
+                                <th class="pb-3">Projeto</th>
+                                <th class="pb-3">Cliente</th>
+                                <th class="pb-3">Status</th>
+                                <th class="pb-3">Progresso</th>
+                                <th class="pb-3">Prazo</th>
+                                <th class="pb-3">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projectsTableBody">
+                            <!-- Dados serão carregados via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="loadingProjects" class="py-4 text-center hidden">
+                    <i class="ph ph-spinner animate-spin text-2xl"></i>
+                    <p class="text-grayText mt-2">Carregando projetos...</p>
+                </div>
+                <div id="noProjectsFound" class="py-8 text-center hidden">
+                    <i class="ph ph-folder-notch-open text-4xl text-grayText"></i>
+                    <p class="text-grayText mt-2">Nenhum projeto encontrado</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal para Adicionar/Editar Projeto -->
+    <div id="projectModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-darkPanel border border-darkBorder rounded-lg p-6 w-full max-w-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="modalTitle" class="text-xl font-semibold">Novo Projeto</h2>
+                <button id="closeModal" class="text-grayText hover:text-white">
+                    <i class="ph ph-x text-xl"></i>
+                </button>
+            </div>
+            <form id="projectForm">
+                <input type="hidden" id="projectId">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="projectName" class="block text-grayText mb-2">Nome do Projeto</label>
+                        <input type="text" id="projectName" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary" required>
+                    </div>
+                    <div>
+                        <label for="clientName" class="block text-grayText mb-2">Cliente</label>
+                        <input type="text" id="clientName" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="projectType" class="block text-grayText mb-2">Tipo de Projeto</label>
+                        <select id="projectType" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="building">Edifício</option>
+                            <option value="house">Residencial</option>
+                            <option value="commercial">Comercial</option>
+                            <option value="infrastructure">Infraestrutura</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="projectStatus" class="block text-grayText mb-2">Status</label>
+                        <select id="projectStatus" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="Planejamento">Planejamento</option>
+                            <option value="Em andamento">Em andamento</option>
+                            <option value="Atrasado">Atrasado</option>
+                            <option value="Concluído">Concluído</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="projectProgress" class="block text-grayText mb-2">Progresso (%)</label>
+                        <input type="number" id="projectProgress" min="0" max="100" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary" required>
+                    </div>
+                    <div>
+                        <label for="projectDeadline" class="block text-grayText mb-2">Prazo</label>
+                        <input type="date" id="projectDeadline" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary" required>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label for="projectDescription" class="block text-grayText mb-2">Descrição</label>
+                    <textarea id="projectDescription" rows="4" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label for="projectBudget" class="block text-grayText mb-2">Orçamento (R$)</label>
+                    <input type="number" id="projectBudget" min="0" step="0.01" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary" required>
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" id="cancelProject" class="px-4 py-2 border border-darkBorder rounded-lg hover:bg-darkBg">Cancelar</button>
+                    <button type="submit" class="bg-primary hover:bg-purple-700 px-4 py-2 rounded-lg">Salvar Projeto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Funções para manipulação da barra lateral e tema
+        const body = document.body;
+        const darkModeToggle = document.getElementById('toggleDarkMode');
+        const darkModeIcon = darkModeToggle.querySelector('i');
+
+        // Carregar tema salvo
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        applyTheme(savedTheme);
+
+        darkModeToggle.addEventListener('click', () => {
+            const newTheme = body.classList.contains('bg-darkBg') ? 'light' : 'dark';
+            applyTheme(newTheme);
+        });
+
+        function applyTheme(theme) {
+            if (theme === 'light') {
+                body.classList.remove('bg-darkBg', 'text-white');
+                body.classList.add('bg-lightBg', 'text-lightText');
+
+                document.querySelectorAll('.panel').forEach(panel => {
+                    panel.classList.remove('bg-darkPanel', 'border-darkBorder');
+                    panel.classList.add('bg-lightPanel', 'border-lightBorder');
+                });
+
+                // Atualizar a barra lateral para o tema claro
+                const sidebar = document.querySelector('.sidebar');
+                sidebar.classList.remove('bg-darkPanel', 'border-darkBorder');
+                sidebar.classList.add('bg-lightPanel', 'border-lightBorder');
+
+                // Atualizar o modal
+                const modal = document.getElementById('projectModal').querySelector('div');
+                modal.classList.remove('bg-darkPanel', 'border-darkBorder');
+                modal.classList.add('bg-lightPanel', 'border-lightBorder');
+
+                // Atualizar inputs
+                document.querySelectorAll('input, select, textarea').forEach(input => {
+                    input.classList.remove('bg-darkBg', 'border-darkBorder');
+                    input.classList.add('bg-white', 'border-lightBorder');
+                });
+
+                darkM
+                darkModeIcon.classList.remove('ph-moon', 'text-white');
+            }
+            else {
+                body.classList.remove('bg-lightBg', 'text-lightText');
+                body.classList.add('bg-darkBg', 'text-white');
+
+                document.querySelectorAll('.panel').forEach(panel => {
+                    panel.classList.remove('bg-lightPanel', 'border-lightBorder');
+                    panel.classList.add('bg-darkPanel', 'border-darkBorder');
+                });
+
+                // Atualizar a barra lateral para o tema escuro
+                const sidebar = document.querySelector('.sidebar');
+                sidebar.classList.remove('bg-lightPanel', 'border-lightBorder');
+                sidebar.classList.add('bg-darkPanel', 'border-darkBorder');
+
+                // Atualizar o modal
+                const modal = document.getElementById('projectModal').querySelector('div');
+                modal.classList.remove('bg-lightPanel', 'border-lightBorder');
+                modal.classList.add('bg-darkPanel', 'border-darkBorder');
+
+                // Atualizar inputs
+                document.querySelectorAll('input, select, textarea').forEach(input => {
+                    input.classList.remove('bg-white', 'border-lightBorder');
+                    input.classList.add('bg-darkBg', 'border-darkBorder');
+                });
+
+                darkModeIcon.classList.add('ph-moon', 'text-white');
+            }
+            localStorage.setItem('theme', theme);
+        }

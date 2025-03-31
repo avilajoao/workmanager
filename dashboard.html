@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Construtora</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Chart.js para gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#8B5CF6",
+                        darkBg: "#121212",
+                        darkPanel: "#1E1E1E",
+                        darkBorder: "#292929",
+                        grayText: "#A1A1A1",
+                        lightBg: "#F5F5F5",
+                        lightPanel: "#FFFFFF",
+                        lightText: "#333333",
+                        lightBorder: "#DDDDDD"
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        .sidebar {
+            width: 4rem;
+            transition: width 0.3s ease;
+        }
+        .sidebar.expanded {
+            width: 12rem;
+        }
+        .sidebar.expanded .sidebar-link {
+            justify-content: flex-start;
+            padding-left: 1.5rem;
+        }
+        .sidebar.expanded .sidebar-text {
+            display: block;
+        }
+    </style>
+    <!-- Adicionar referência ao arquivo JavaScript -->
+    <script src="dashboard.js" defer></script>
+</head>
+<body class="bg-darkBg text-white font-sans transition-all duration-300">
+
+    <!-- Container Principal -->
+    <div class="flex h-screen">
+
+        <!-- Sidebar -->
+        <aside class="sidebar flex flex-col items-center py-6 border-r transition-colors duration-300 bg-darkPanel border-darkBorder">
+            <button id="toggleSidebar" class="text-grayText hover:text-white mb-6">
+                <i class="ph ph-list text-xl"></i>
+            </button>
+            <nav class="flex flex-col space-y-6 w-full">
+                <a href="home.html" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
+                    <i class="ph ph-house text-xl"></i>
+                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Início</span>
+                </a>
+                <a href="dashboard.html" class="text-primary hover:text-white flex items-center justify-center sidebar-link">
+                    <i class="ph ph-chart-bar text-xl"></i>
+                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Dashboard</span>
+                </a>
+                <a href="#" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
+                    <i class="ph ph-kanban text-xl"></i>
+                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Backlog</span>
+                </a>
+                <a href="#" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
+                    <i class="ph ph-calendar text-xl"></i>
+                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Agenda</span>
+                </a>
+                <a href="#" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
+                    <i class="ph ph-chart-line text-xl"></i>
+                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Relatórios</span>
+                </a>
+                <a href="#" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
+                    <i class="ph ph-gear text-xl"></i>
+                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Configurações</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="flex-1 p-8 overflow-y-auto">
+
+            <!-- Header -->
+            <header class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-3xl font-semibold">Dashboard</h1>
+                    <p class="text-grayText" id="current-date"></p>
+                </div>
+                <button id="toggleDarkMode" class="bg-transparent">
+                    <i class="ph ph-moon text-xl"></i>
+                </button>
+            </header>
+
+            <!-- Cards de Métricas -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Projetos Ativos -->
+                <div class="panel p-6 rounded-lg border bg-darkPanel border-darkBorder">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-grayText text-sm">Projetos Ativos</p>
+                            <h3 class="text-2xl font-bold mt-1" id="active-projects-count">--</h3>
+                        </div>
+                        <div class="bg-primary/20 p-2 rounded-lg">
+                            <i class="ph ph-buildings text-primary text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center">
+                        <span class="text-green-500 flex items-center text-sm">
+                            <i class="ph ph-trend-up mr-1" id="active-projects-trend-icon"></i>
+                            <span id="active-projects-trend">--</span>%
+                        </span>
+                        <span class="text-grayText text-sm ml-2">vs mês anterior</span>
+                    </div>
+                </div>
+
+                <!-- Orçamento Total -->
+                <div class="panel p-6 rounded-lg border bg-darkPanel border-darkBorder">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-grayText text-sm">Orçamento Total</p>
+                            <h3 class="text-2xl font-bold mt-1">R$ 4.2M</h3>
+                        </div>
+                        <div class="bg-green-500/20 p-2 rounded-lg">
+                            <i class="ph ph-currency-circle-dollar text-green-500 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center">
+                        <span class="text-green-500 flex items-center text-sm">
+                            <i class="ph ph-trend-up mr-1"></i> 12%
+                        </span>
+                        <span class="text-grayText text-sm ml-2">vs mês anterior</span>
+                    </div>
+                </div>
+
+                <!-- Tarefas Pendentes -->
+                <div class="panel p-6 rounded-lg border bg-darkPanel border-darkBorder">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-grayText text-sm">Tarefas Pendentes</p>
+                            <h3 class="text-2xl font-bold mt-1">42</h3>
+                        </div>
+                        <div class="bg-yellow-500/20 p-2 rounded-lg">
+                            <i class="ph ph-clipboard-text text-yellow-500 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center">
+                        <span class="text-red-500 flex items-center text-sm">
+                            <i class="ph ph-trend-down mr-1"></i> 5%
+                        </span>
+                        <span class="text-grayText text-sm ml-2">vs mês anterior</span>
+                    </div>
+                </div>
+
+                <!-- Equipes Ativas -->
+                <div class="panel p-6 rounded-lg border bg-darkPanel border-darkBorder">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-grayText text-sm">Equipes Ativas</p>
+                            <h3 class="text-2xl font-bold mt-1">8</h3>
+                        </div>
+                        <div class="bg-blue-500/20 p-2 rounded-lg">
+                            <i class="ph ph-users-three text-blue-500 text-xl"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex items-center">
+                        <span class="text-green-500 flex items-center text-sm">
+                            <i class="ph ph-trend-up mr-1"></i> 2%
+                        </span>
+                        <span class="text-grayText text-sm ml-2">vs mês anterior</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gráficos e Tabelas -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- Gráfico de Progresso dos Projetos -->
+                <div class="panel p-6 rounded-lg border bg-darkPanel border-darkBorder">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-semibold">Progresso dos Projetos</h2>
+                        <div class="flex space-x-2">
+                            <button class="text-grayText hover:text-white">
+                                <i class="ph ph-dots-three-outline-vertical"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="h-64">
+                        <canvas id="projectsChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Gráfico de Orçamento -->
+                <div class="panel p-6 rounded-lg border bg-darkPanel border-darkBorder">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-semibold">Orçamento vs Realizado</h2>
+                        <div class="flex space-x-2">
+                            <button class="text-grayText hover:text-white">
+                                <i class="ph ph-dots-three-outline-vertical"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="h-64">
+                        <canvas id="budgetChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Projetos Recentes -->
+            <div class="panel p-6 rounded-lg border bg-darkPanel border-darkBorder mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-semibold">Projetos Recentes</h2>
+                    <button class="text-primary hover:underline text-sm flex items-center">
+                        Ver todos <i class="ph ph-arrow-right ml-1"></i>
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-left text-grayText border-b border-darkBorder">
+                                <th class="pb-3">Projeto</th>
+                                <th class="pb-3">Cliente</th>
+                                <th class="pb-3">Status</th>
+                                <th class="pb-3">Progresso</th>
+                                <th class="pb-3">Prazo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-darkBorder">
+                                <td class="py-4">
+                                    <div class="flex items-center">
+                                        <div class="bg-blue-500/20 p-2 rounded mr-3">
+                                            <i class="ph ph-buildings text-blue-500"></i>
+                                        </div>
+                                        <span>Edifício Aurora</span>
+                                    </div>
+                                </td>
+                                <td class="py-4">Construtora XYZ</td>
+                                <td class="py-4">
+                                    <span class="px-2 py-1 bg-green-500/20 text-green-500 rounded text-xs">Em andamento</span>
+                                </td>
+                                <td class="py-4">
+                                    <div class="w-full bg-darkBorder rounded-full h-2">
+                                        <div class="bg-primary h-2 rounded-full" style="width: 75%"></div>
+                                    </div>
+                                </td>
+                                <td class="py-4">Dez 2023</td>
+                            </tr>
+                            <tr class="border-b border-darkBorder">
+                                <td class="py-4">
+                                    <div class="flex items-center">
+                                        <div class="bg-purple-500/20 p-2 rounded mr-3">
+                                            <i class="ph ph-house-line text-purple-500"></i>
+                                        </div>
+                                        <span>Condomínio Parque Verde</span>
+                                    </div>
+                                </td>
+                                <td class="py-4">Incorporadora ABC</td>
+                                <td class="py-4">
+                                    <span class="px-2 py-1 bg-yellow-500/20 text-yellow-500 rounded text-xs">Planejamento</span>
+                                </td>
+                                <td class="py-4">
+                                    <div class="w-full bg-darkBorder rounded-full h-2">
+                                        <div class="bg-yellow-500 h-2 rounded-full" style="width: 30%"></div>
+                                    </div>
+                                </td>
+                                <td class="py-4">Mar 2024</td>
+                            </tr>
+                            <tr class="border-b border-darkBorder">
+                                <td class="py-4">
+                                    <div class="flex items-center">
+                                        <div class="bg-red-500/20 p-2 rounded mr-3">
+                                            <i class="ph ph-storefront text-red-500"></i>
+                                        </div>
+                                        <span>Shopping Center Norte</span>
+                                    </div>
+                                </td>
+                                <td class="py-4">Grupo Investimentos</td>
+                                <td class="py-4">
+                                    <span class="px-2 py-1 bg-red-500/20 text-red-500 rounded text-xs">Atrasado</span>
+                                </td>
+                                <td class="py-4">
+                                    <div class="w-full bg-darkBorder rounded-full h-2">
+                                        <div class="bg-red-500 h-

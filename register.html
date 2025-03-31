@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Construtora</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#8B5CF6",
+                        darkBg: "#121212",
+                        darkPanel: "#1E1E1E",
+                        darkBorder: "#292929",
+                        grayText: "#A1A1A1",
+                        lightBg: "#F5F5F5",
+                        lightPanel: "#FFFFFF",
+                        lightText: "#333333",
+                        lightBorder: "#DDDDDD"
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+<body class="bg-darkBg text-white font-sans transition-all duration-300">
+
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-darkPanel border border-darkBorder rounded-lg p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold mb-2">Criar Conta</h1>
+                <p class="text-grayText">Registre-se para acessar o sistema</p>
+            </div>
+            
+            <div id="registerError" class="bg-red-500/20 text-red-500 p-3 rounded-lg mb-6 hidden">
+                <p class="text-sm"></p>
+            </div>
+            
+            <form id="registerForm" class="space-y-6">
+                <div>
+                    <label for="name" class="block text-grayText mb-2">Nome Completo</label>
+                    <div class="relative">
+                        <i class="ph ph-user absolute left-3 top-3 text-grayText"></i>
+                        <input type="text" id="name" name="name" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-primary" required>
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="email" class="block text-grayText mb-2">Email</label>
+                    <div class="relative">
+                        <i class="ph ph-envelope absolute left-3 top-3 text-grayText"></i>
+                        <input type="email" id="email" name="email" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-primary" required>
+                    </div>
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-grayText mb-2">Senha</label>
+                    <div class="relative">
+                        <i class="ph ph-lock absolute left-3 top-3 text-grayText"></i>
+                        <input type="password" id="password" name="password" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-primary" required>
+                    </div>
+                    <p class="text-xs text-grayText mt-1">A senha deve ter pelo menos 8 caracteres, incluindo letras e números</p>
+                </div>
+                
+                <div>
+                    <label for="confirmPassword" class="block text-grayText mb-2">Confirmar Senha</label>
+                    <div class="relative">
+                        <i class="ph ph-lock-key absolute left-3 top-3 text-grayText"></i>
+                        <input type="password" id="confirmPassword" name="confirmPassword" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-primary" required>
+                    </div>
+                </div>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" id="terms" name="terms" class="mr-2" required>
+                    <label for="terms" class="text-grayText text-sm">
+                        Concordo com os <a href="#" class="text-primary hover:underline">Termos de Serviço</a> e <a href="#" class="text-primary hover:underline">Política de Privacidade</a>
+                    </label>
+                </div>
+                
+                <button type="submit" class="w-full bg-primary hover:bg-purple-700 py-3 rounded-lg transition-colors">
+                    Criar Conta
+                </button>
+            </form>
+            
+            <div class="mt-6 text-center">
+                <p class="text-grayText">
+                    Já tem uma conta? 
+                    <a href="login.html" class="text-primary hover:underline">Faça login</a>
+                </p>
+            </div>
+            
+            <div class="mt-8 pt-6 border-t border-darkBorder text-center">
+                <button id="toggleDarkMode" class="text-grayText hover:text-white">
+                    <i class="ph ph-moon text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Verificar se já está autenticado
+            if (auth.isAuthenticated()) {
+                window.location.href = '/home.html';
+                return;
+            }
+            
+            // Configurar formulário de registro
+            const registerForm = document.getElementById('registerForm');
+            const registerError = document.getElementById('registerError');
+            
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const name = document.getElementById('name').value;
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                
+                // Validar senha
+                if (password.length < 8) {
+                    registerError.querySelector('p').textContent = 'A senha deve ter pelo menos 8 caracteres.';
+                    registerError.classList.remove('hidden');
+                    return;
+                }
+                
+                if (!/\d/.test(password) || !/[a-zA-Z]/.test(password)) {
+                    registerError.querySelector('p').textContent = 'A senha deve conter letras e números.';
+                    registerError.classList.remove('hidden');
+                    return;
+                }
+                
+                if (password !== confirmPassword) {
+                    registerError.querySelector('p').textContent = 'As senhas não coincidem.';
+                    registerError.classList.remove('hidden');
+                    return;
+                }
+                
+                try {
+                    registerError.classList.add('hidden');
+                    
+                    // Desabilitar botão durante o registro
+                    const submitButton = registerForm.querySelector('button[type="submit"]');
+                    submitButton.disabled = true;
+                    submitButton.innerHTML = '<i class="ph ph-spinner animate-spin mr-2"></i> Criando conta...';
+                    
+                    // Registrar usuário
+                    await auth.register({ name, email, password });
+                    
+                    // Fazer login automaticamente
+                    await auth.login(email, password);
+                    
+                    // Redirecionar para a página inicial
+                    window.location.href = '/home.html';
+                } catch (error) {
+                    registerError.querySelector('p').textContent = error.message || 'Falha no registro. Tente novamente.';
+                    registerError.classList.remove('hidden');
+                    
+                    // Reativar botão
+                    const submitButton = registerForm.querySelector('button[type="submit"]');
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = 'Criar Conta';
+                }
+            });
+            
+            // Toggle do tema
+            const darkModeToggle = document.getElementById('toggleDarkMode');
+            
+            // Carregar tema salvo
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            applyTheme(savedTheme);
+            
+            darkModeToggle.addEventListener('click', () => {
+                const newTheme = document.body.classList.contains('bg-darkBg') ? 'light' : 'dark';
+                applyTheme(newTheme);
+            });
+            
+            function applyTheme(theme) {
+                if (theme === 'light') {
+                    document.body.classList.remove('bg-darkBg', 'text-white');
+                    document.body.classList.add('bg-lightBg', 'text-lightText');
+                    
+                    const panel = document.querySelector('.bg-darkPanel');
+                    panel.classList.remove('bg-darkPanel', 'border-darkBorder');
+                    panel.classList.add('bg-lightPanel', 'border-lightBorder');
+                    
+                    document.querySelectorAll('input').forEach(input => {
+                        input.classList.remove('bg-darkBg', 'border-darkBorder');
+                        input.classList.add('bg-white', 'border-lightBorder');
+                    });
+                    
+                    darkModeToggle.innerHTML = '<i class="ph ph-sun text-xl"></i>';
+                } else {
+                    document.body.classList.remove('bg-lightBg', 'text-lightText');
+                    document.body.classList.add('bg-darkBg', 'text-white');
+                    
+                    const panel = document.querySelector('.bg-lightPanel, .bg-darkPanel');
+                    panel.classList.remove('bg-lightPanel', 'border-lightBorder');
+                    panel.classList.add('bg-darkPanel', 'border-darkBorder');
+                    
+                    document.querySelectorAll('input').forEach(input => {
+                        input.classList.remove('bg-white', 'border-lightBorder');
+                        input.classList.add('bg-darkBg', 'border-darkBorder');
+                    });
+                    
+                    darkModeToggle.innerHTML = '<i class="ph ph-moon text-xl"></i>';
+                }
+                
+                localStorage.setItem('theme', theme);
+            }
+        });
+    </script>
+
+</body>
+</html>
