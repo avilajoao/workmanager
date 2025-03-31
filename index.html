@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WorkManager - Sistema de Gestão para Construtoras</title>
+    <script src="api-mock.js"></script>
+    <script src="auth.js"></script>
+    <style>
+        body {
+            background-color: #121212;
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .loader {
+            border: 5px solid #333;
+            border-top: 5px solid #8B5CF6;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .container {
+            text-align: center;
+        }
+        h1 {
+            color: #8B5CF6;
+            margin-bottom: 10px;
+        }
+        p {
+            color: #A1A1A1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="loader"></div>
+        <h1>WorkManager</h1>
+        <p>Carregando o sistema...</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+        });

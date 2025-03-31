@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel - Construtora</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Adicionar Phosphor Icons -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script>
         tailwind.config = {
@@ -28,18 +27,14 @@
     </script>
     <style>
         .sidebar {
-            width: 4rem;
+            width: 5rem;
             transition: width 0.3s ease;
         }
         .sidebar.expanded {
-            width: 12rem;
+            width: 15rem;
         }
-        .sidebar.expanded .sidebar-link {
-            justify-content: flex-start;
-            padding-left: 1.5rem;
-        }
-        .sidebar.expanded .sidebar-text {
-            display: block;
+        .panel {
+            @apply bg-darkPanel border-darkBorder;
         }
     </style>
 </head>
@@ -49,188 +44,288 @@
     <div class="flex h-screen">
 
         <!-- Sidebar -->
-        <aside class="sidebar flex flex-col items-center py-6 border-r transition-colors duration-300">
-            <button id="toggleSidebar" class="text-grayText hover:text-white mb-6">
-                <i class="ph ph-list text-xl"></i>
+        <aside class="sidebar bg-darkPanel flex flex-col items-center py-6 border-r border-darkBorder">
+            <button id="toggleSidebar" class="text-grayText text-2xl mb-6">
+                <i class="ph ph-list"></i>
             </button>
-            <nav class="flex flex-col space-y-6 w-full">
-                <a href="home.html" class="text-primary hover:text-white flex items-center justify-center sidebar-link">
-                    <i class="ph ph-house text-xl"></i>
-                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Início</span>
+            <nav class="flex flex-col space-y-6">
+                <a href="home.html" class="text-white hover:text-primary text-2xl">
+                    <i class="ph ph-house"></i>
+                    <span class="hidden ml-3 text-base">Início</span>
                 </a>
-                <a href="dashboard.html" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
-                    <i class="ph ph-chart-bar text-xl"></i>
-                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Dashboard</span>
+                <a href="backlog.html" class="text-grayText hover:text-white text-2xl">
+                    <i class="ph ph-kanban"></i>
+                    <span class="hidden ml-3 text-base">Backlog</span>
                 </a>
-                <a href="#" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
-                    <i class="ph ph-kanban text-xl"></i>
-                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Backlog</span>
+                <a href="projects.html" class="text-grayText hover:text-white text-2xl">
+                    <i class="ph ph-buildings"></i>
+                    <span class="hidden ml-3 text-base">Projetos</span>
                 </a>
-                <a href="#" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
-                    <i class="ph ph-calendar text-xl"></i>
-                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Agenda</span>
-                </a>
-                <a href="#" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
-                    <i class="ph ph-chart-line text-xl"></i>
-                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Relatórios</span>
-                </a>
-                <a href="#" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
-                    <i class="ph ph-gear text-xl"></i>
-                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Configurações</span>
+                <a href="settings.html" class="text-grayText hover:text-white text-2xl">
+                    <i class="ph ph-gear"></i>
+                    <span class="hidden ml-3 text-base">Configurações</span>
                 </a>
             </nav>
+            <div class="mt-auto">
+                <button id="logoutBtn" class="text-grayText hover:text-white text-2xl">
+                    <i class="ph ph-sign-out"></i>
+                    <span class="hidden ml-3 text-base">Sair</span>
+                </button>
+            </div>
         </aside>
 
         <!-- Conteúdo Principal -->
-        <main class="flex-1 p-8">
+        <main class="flex-1 p-8 overflow-y-auto">
 
             <!-- Header -->
             <header class="flex justify-between items-center mb-6">
-                <h1 class="text-3xl font-semibold">Bom dia, João</h1>
-                <button id="toggleDarkMode" class="bg-transparent">
-                    <i class="ph ph-moon text-xl"></i>
-                </button>
+                <div>
+                    <h1 class="text-3xl font-semibold" id="welcomeMessage">Carregando...</h1>
+                    <p class="text-grayText" id="current-date"></p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="toggleDarkMode" class="bg-transparent text-2xl">
+                        <i class="ph ph-moon"></i>
+                    </button>
+                    <div class="relative" id="userProfile">
+                        <button class="flex items-center space-x-2 bg-darkPanel px-3 py-2 rounded-lg border border-darkBorder">
+                            <span id="userInitials" class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center font-medium"></span>
+                            <span id="userName">Carregando...</span>
+                            <i class="ph ph-caret-down text-grayText"></i>
+                        </button>
+                        <!-- Dropdown menu -->
+                        <div class="absolute right-0 mt-2 w-48 bg-darkPanel border border-darkBorder rounded-lg shadow-lg hidden" id="userDropdown">
+                            <ul class="py-2">
+                                <li><a href="profile.html" class="block px-4 py-2 hover:bg-darkBorder">Meu Perfil</a></li>
+                                <li><a href="settings.html" class="block px-4 py-2 hover:bg-darkBorder">Configurações</a></li>
+                                <li><hr class="my-1 border-darkBorder"></li>
+                                <li><button id="logoutBtnDropdown" class="block w-full text-left px-4 py-2 hover:bg-darkBorder text-red-400">Sair</button></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </header>
 
             <!-- Área de Painéis -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 <!-- Agenda -->
-                <section class="panel p-6 rounded-lg border bg-darkPanel border-darkBorder">
-                    <div class="flex items-center mb-2">
-                        <i class="ph ph-calendar mr-2 text-xl"></i>
-                        <h2 class="text-xl font-semibold">Agenda</h2>
+                <section class="panel p-6 rounded-lg border">
+                    <h2 class="text-xl font-semibold mb-2">📅 Agenda</h2>
+                    <p class="text-grayText" id="agenda-date"></p>
+                    <div id="upcoming-events" class="mt-4 space-y-3">
+                        <div class="animate-pulse">
+                            <div class="h-4 bg-darkBorder rounded w-3/4 mb-2"></div>
+                            <div class="h-4 bg-darkBorder rounded w-1/2"></div>
+                        </div>
                     </div>
-                    <p class="text-grayText" id="current-date"></p>
-                    <button class="mt-4 bg-primary px-4 py-2 rounded-lg text-white hover:bg-purple-600 flex items-center">
-                        <i class="ph ph-plus mr-2"></i> Adicionar ao calendário
+                    <button class="mt-4 bg-primary px-4 py-2 rounded-lg text-white hover:bg-purple-600">
+                        + Adicionar ao calendário
                     </button>
                 </section>
 
                 <!-- Lista de Tarefas -->
-                <section class="panel p-6 rounded-lg border bg-darkPanel border-darkBorder">
-                    <div class="flex items-center mb-4">
-                        <i class="ph ph-check-square mr-2 text-xl"></i>
-                        <h2 class="text-xl font-semibold">Lista de Tarefas</h2>
+                <section class="panel p-6 rounded-lg border">
+                    <h2 class="text-xl font-semibold mb-4">✅ Lista de Tarefas</h2>
+                    <div id="task-list" class="space-y-3">
+                        <div class="animate-pulse">
+                            <div class="h-4 bg-darkBorder rounded w-3/4 mb-2"></div>
+                            <div class="h-4 bg-darkBorder rounded w-1/2"></div>
+                        </div>
                     </div>
-                    <ul class="space-y-3">
-                        <li class="flex items-center">
-                            <input type="checkbox" class="mr-3 w-5 h-5 task" data-task="leads">
-                            <span>Captar e qualificar leads</span>
-                        </li>
-                        <li class="flex items-center">
-                            <input type="checkbox" class="mr-3 w-5 h-5 task" data-task="backlog">
-                            <span>Criar lista 'Backlog Construtora'</span>
-                        </li>
-                        <li class="flex items-center">
-                            <input type="checkbox" class="mr-3 w-5 h-5 task" data-task="pesquisa">
-                            <span>Filtros e Pesquisa</span>
-                        </li>
-                    </ul>
+                    <a href="backlog.html" class="mt-4 inline-block text-primary hover:underline">
+                        Ver todas as tarefas →
+                    </a>
                 </section>
 
             </div>
 
+            <!-- Projetos Recentes -->
+            <section class="mt-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold">Projetos Recentes</h2>
+                    <a href="projects.html" class="text-primary hover:underline">Ver todos →</a>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="recent-projects">
+                    <div class="animate-pulse">
+                        <div class="h-32 bg-darkPanel border border-darkBorder rounded-lg"></div>
+                    </div>
+                    <div class="animate-pulse">
+                        <div class="h-32 bg-darkPanel border border-darkBorder rounded-lg"></div>
+                    </div>
+                    <div class="animate-pulse">
+                        <div class="h-32 bg-darkPanel border border-darkBorder rounded-lg"></div>
+                    </div>
+                </div>
+            </section>
+
         </main>
     </div>
 
+    <!-- Scripts -->
+    <script src="api-mock.js"></script>
+    <script src="auth.js"></script>
     <script>
-        const body = document.body;
-        const darkModeToggle = document.getElementById('toggleDarkMode');
-        const darkModeIcon = darkModeToggle.querySelector('i');
-
-        // Carregar tema salvo
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-        applyTheme(savedTheme);
-
-        darkModeToggle.addEventListener('click', () => {
-            const newTheme = body.classList.contains('bg-darkBg') ? 'light' : 'dark';
-            applyTheme(newTheme);
-        });
-
-        function applyTheme(theme) {
-            if (theme === 'light') {
-                body.classList.remove('bg-darkBg', 'text-white');
-                body.classList.add('bg-lightBg', 'text-lightText');
-
-                document.querySelectorAll('.panel').forEach(panel => {
-                    panel.classList.remove('bg-darkPanel', 'border-darkBorder');
-                    panel.classList.add('bg-lightPanel', 'border-lightBorder');
-                });
-
-                // Atualizar a barra lateral para o tema claro
-                const sidebar = document.querySelector('.sidebar');
-                sidebar.classList.remove('bg-darkPanel', 'border-darkBorder');
-                sidebar.classList.add('bg-lightPanel', 'border-lightBorder');
-
-                // Atualizar links da barra lateral
-                document.querySelectorAll('.sidebar-link').forEach(link => {
-                    link.classList.remove('hover:text-white');
-                    link.classList.add('hover:text-lightText');
-                });
-
-                darkModeIcon.classList.remove('ph-moon');
-                darkModeIcon.classList.add('ph-sun');
-            } else {
-                body.classList.remove('bg-lightBg', 'text-lightText');
-                body.classList.add('bg-darkBg', 'text-white');
-
-                document.querySelectorAll('.panel').forEach(panel => {
-                    panel.classList.remove('bg-lightPanel', 'border-lightBorder');
-                    panel.classList.add('bg-darkPanel', 'border-darkBorder');
-                });
-
-                // Atualizar a barra lateral para o tema escuro
-                const sidebar = document.querySelector('.sidebar');
-                sidebar.classList.remove('bg-lightPanel', 'border-lightBorder');
-                sidebar.classList.add('bg-darkPanel', 'border-darkBorder');
-
-                // Atualizar links da barra lateral
-                document.querySelectorAll('.sidebar-link').forEach(link => {
-                    link.classList.remove('hover:text-lightText');
-                    link.classList.add('hover:text-white');
-                });
-
-                darkModeIcon.classList.remove('ph-sun');
-                darkModeIcon.classList.add('ph-moon');
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Verificar autenticação
+            if (!auth.isAuthenticated()) {
+                window.location.href = 'login.html';
+                return;
             }
-
-            localStorage.setItem('theme', theme);
-        }
-
-        // Sidebar Toggle
-        document.getElementById('toggleSidebar').addEventListener('click', () => {
-            const sidebar = document.querySelector('.sidebar');
-            sidebar.classList.toggle('expanded');
+            
+            // Carregar dados do usuário
+            const currentUser = auth.getCurrentUser();
+            if (currentUser) {
+                document.getElementById('welcomeMessage').textContent = `Bom dia, ${currentUser.name.split(' ')[0]}`;
+                document.getElementById('userName').textContent = currentUser.name;
+                
+                // Iniciais do usuário
+                const initials = currentUser.name.split(' ')
+                    .map(name => name[0])
+                    .slice(0, 2)
+                    .join('')
+                    .toUpperCase();
+                document.getElementById('userInitials').textContent = initials;
+            }
+            
+            // Atualizar data
+            updateCurrentDate();
+            
+            // Carregar tema salvo
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            applyTheme(savedTheme);
+            
+            // Carregar dados
+            await loadData();
+            
+            // Configurar eventos
+            setupEventListeners();
         });
-
-        // Salvar Status das Tarefas no LocalStorage
-        document.querySelectorAll('.task').forEach(task => {
-            const taskId = task.dataset.task;
-            task.checked = localStorage.getItem(taskId) === 'true';
-
-            task.addEventListener('change', () => {
-                localStorage.setItem(taskId, task.checked);
-            });
-        });
-
-        // Atualizar a data atual
+        
+        // Atualizar data atual
         function updateCurrentDate() {
             const dateElement = document.getElementById('current-date');
+            const agendaDate = document.getElementById('agenda-date');
+            
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            const today = new Date();
+            const currentDate = new Date().toLocaleDateString('pt-BR', options);
             
-            // Formatar a data em português do Brasil
-            const formattedDate = today.toLocaleDateString('pt-BR', options);
-            
-            // Capitalizar a primeira letra
-            const capitalizedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
-            
-            dateElement.textContent = capitalizedDate;
+            dateElement.textContent = currentDate;
+            agendaDate.textContent = currentDate;
         }
-
-        // Chamar a função quando a página carregar
-        document.addEventListener('DOMContentLoaded', updateCurrentDate);
+        
+        // Carregar dados
+        async function loadData() {
+            try {
+                // Carregar tarefas
+                const tasksResponse = await fetchWithAuth('/api/tasks');
+                if (tasksResponse.ok) {
+                    const tasks = await tasksResponse.json();
+                    renderTasks(tasks);
+                }
+                
+                // Carregar projetos
+                const projectsResponse = await fetchWithAuth('/api/projects');
+                if (projectsResponse.ok) {
+                    const projects = await projectsResponse.json();
+                    renderProjects(projects);
+                }
+                
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+            }
+        }
+        
+        // Renderizar tarefas
+        function renderTasks(tasks) {
+            const taskList = document.getElementById('task-list');
+            taskList.innerHTML = '';
+            
+            // Filtrar tarefas pendentes e ordenar por prioridade
+            const pendingTasks = tasks
+                .filter(task => task.status !== 'done')
+                .sort((a, b) => {
+                    const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
+                    return priorityOrder[a.priority] - priorityOrder[b.priority];
+                })
+                .slice(0, 5); // Mostrar apenas 5 tarefas
+            
+            if (pendingTasks.length === 0) {
+                taskList.innerHTML = '<p class="text-grayText">Nenhuma tarefa pendente.</p>';
+                return;
+            }
+            
+            pendingTasks.forEach(task => {
+                const taskElement = document.createElement('li');
+                taskElement.className = 'flex items-center';
+                
+                // Determinar cor da prioridade
+                let priorityColor = 'bg-gray-500';
+                
+                switch (task.priority) {
+                    case 'low':
+                        priorityColor = 'bg-blue-500';
+                        break;
+                    case 'medium':
+                        priorityColor = 'bg-yellow-500';
+                        break;
+                    case 'high':
+                        priorityColor = 'bg-orange-500';
+                        break;
+                    case 'urgent':
+                        priorityColor = 'bg-red-500';
+                        break;
+                }
+                
+                taskElement.innerHTML = `
+                    <span class="w-2 h-2 rounded-full ${priorityColor} mr-3"></span>
+                    <span class="flex-1">${task.title}</span>
+                `;
+                
+                taskList.appendChild(taskElement);
+            });
+        }
+        
+        // Renderizar projetos
+        function renderProjects(projects) {
+            const projectsContainer = document.getElementById('recent-projects');
+            projectsContainer.innerHTML = '';
+            
+            // Ordenar projetos por data de criação (mais recentes primeiro)
+            const recentProjects = projects
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                .slice(0, 3); // Mostrar apenas 3 projetos
+            
+            if (recentProjects.length === 0) {
+                projectsContainer.innerHTML = '<p class="text-grayText col-span-3 text-center">Nenhum projeto encontrado.</p>';
+                return;
+            }
+            
+            // Mapear status para texto e cor
+            const statusMap = {
+                'planning': { text: 'Planejamento', color: 'bg-blue-500' },
+                'in-progress': { text: 'Em Andamento', color: 'bg-yellow-500' },
+                'completed': { text: 'Concluído', color: 'bg-green-500' },
+                'on-hold': { text: 'Em Espera', color: 'bg-red-500' }
+            };
+            
+            recentProjects.forEach(project => {
+                const status = statusMap[project.status] || { text: 'Desconhecido', color: 'bg-gray-500' };
+                
+                const projectCard = document.createElement('div');
+                projectCard.className = 'bg-darkPanel border border-darkBorder rounded-lg p-4 hover:border-primary transition-colors';
+                projectCard.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="font-medium">${project.name}</h3>
+                        <span class="px-2 py-1 text-xs rounded ${status.color} text-white">${status.text}</span>
+                    </div>
+                    <p class="text-grayText text-sm mb-3">${project.description || 'Sem descrição'}</p>
+                    <a href="projects.html?id=${project.id}" class="text-primary hover:underline text-sm">Ver detalhes →</a>
+                `;
+                
+                projectsContainer.appendChild(projectCard);
+            });
+        }
     </script>
 
 </body>

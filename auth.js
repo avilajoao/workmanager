@@ -2,17 +2,21 @@
 const auth = {
     // Verificar se o usuário está autenticado
     isAuthenticated() {
-        const token = this.getToken();
-        if (!token) return false;
+        const token = localStorage.getItem('token');
+        const expiresAt = localStorage.getItem('expiresAt');
+        
+        if (!token || !expiresAt) {
+            return false;
+        }
         
         // Verificar se o token expirou
-        const expiresAt = localStorage.getItem('expiresAt');
-        if (!expiresAt) return false;
+        const now = new Date();
+        const expiration = new Date(expiresAt);
         
-        return new Date(expiresAt) > new Date();
+        return now < expiration;
     },
     
-    // Obter token
+    // Obter token de autenticação
     getToken() {
         return localStorage.getItem('token');
     },
@@ -23,7 +27,7 @@ const auth = {
         return userJson ? JSON.parse(userJson) : null;
     },
     
-    // Login
+    // Fazer login
     async login(email, password) {
         try {
             const response = await fetch('/api/auth/login', {
@@ -36,7 +40,7 @@ const auth = {
             
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.message || 'Falha no login');
+                throw new Error(error.message || 'Falha na autenticação');
             }
             
             const data = await response.json();
@@ -48,22 +52,12 @@ const auth = {
             
             return data.user;
         } catch (error) {
-            console.error('Erro no login:', error);
+            console.error('Erro de login:', error);
             throw error;
         }
     },
     
-    // Logout
-    logout() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('expiresAt');
-        
-        // Redirecionar para a página de login
-        window.location.href = '/login.html';
-    },
-    
-    // Registrar novo usuário
+    // Fazer registro
     async register(userData) {
         try {
             const response = await fetch('/api/auth/register', {
@@ -88,9 +82,20 @@ const auth = {
             
             return data.user;
         } catch (error) {
-            console.error('Erro no registro:', error);
+            console.error('Erro de registro:', error);
             throw error;
         }
+    },
+    
+    // Fazer logout
+    logout() {
+        // Limpar dados de autenticação
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('expiresAt');
+        
+        // Redirecionar para a página de login
+        window.location.href = 'login.html';
     },
     
     // Renovar token
@@ -109,46 +114,15 @@ const auth = {
             
             const data = await response.json();
             
-            // Atualizar dados de autenticação
+            // Atualizar token e data de expiração
             localStorage.setItem('token', data.token);
             localStorage.setItem('expiresAt', data.expiresAt);
             
-            return true;
+            return data.token;
         } catch (error) {
             console.error('Erro ao renovar token:', error);
             this.logout();
-            return false;
-        }
-    },
-    
-    // Inicializar autenticação
-    init() {
-        // Verificar autenticação em cada página
-        if (!this.isAuthenticated() && !window.location.pathname.includes('login.html')) {
-            // Redirecionar para login se não estiver autenticado
-            window.location.href = '/login.html';
-            return;
-        }
-        
-        // Configurar renovação automática de token
-        if (this.isAuthenticated()) {
-            const expiresAt = new Date(localStorage.getItem('expiresAt'));
-            const now = new Date();
-            const timeUntilExpiry = expiresAt - now;
-            
-            // Se o token expira em menos de 5 minutos, renovar agora
-            if (timeUntilExpiry < 5 * 60 * 1000) {
-                this.refreshToken();
-            } else {
-                // Agendar renovação para 5 minutos antes da expiração
-                const timeToRefresh = timeUntilExpiry - (5 * 60 * 1000);
-                setTimeout(() => this.refreshToken(), timeToRefresh);
-            }
+            throw error;
         }
     }
 };
-
-// Inicializar autenticação quando o documento estiver pronto
-document.addEventListener('DOMContentLoaded', () => {
-    auth.init();
-});

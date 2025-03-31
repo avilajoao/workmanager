@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Construtora</title>
+    <title>Login - WorkManager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script>
@@ -26,97 +26,108 @@
         };
     </script>
 </head>
-<body class="bg-darkBg text-white font-sans min-h-screen flex items-center justify-center p-4">
+<body class="bg-darkBg text-white font-sans">
 
-    <div class="w-full max-w-md">
-        <!-- Logo -->
-        <div class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-primary">WorkManager</h1>
-            <p class="text-grayText mt-2">Sistema de Gestão para Construtoras</p>
-        </div>
-        
-        <!-- Card de Login -->
-        <div class="bg-darkPanel border border-darkBorder rounded-lg p-8 shadow-lg">
-            <h2 class="text-2xl font-semibold mb-6">Entrar</h2>
-            
-            <!-- Formulário de Login -->
-            <form id="loginForm" class="space-y-6">
-                <div>
-                    <label for="email" class="block text-grayText mb-2">Email</label>
-                    <div class="relative">
-                        <i class="ph ph-envelope absolute left-3 top-3 text-grayText"></i>
-                        <input type="email" id="email" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-primary" required>
-                    </div>
-                </div>
-                
-                <div>
-                    <label for="password" class="block text-grayText mb-2">Senha</label>
-                    <div class="relative">
-                        <i class="ph ph-lock absolute left-3 top-3 text-grayText"></i>
-                        <input type="password" id="password" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-primary" required>
-                    </div>
-                </div>
-                
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <input type="checkbox" id="remember" class="mr-2">
-                        <label for="remember" class="text-grayText">Lembrar-me</label>
-                    </div>
-                    <a href="#" class="text-primary hover:text-purple-400">Esqueceu a senha?</a>
-                </div>
-                
-                <button type="submit" class="w-full bg-primary hover:bg-purple-700 py-3 rounded-lg font-medium transition-colors">
-                    Entrar
-                </button>
-            </form>
-            
-            <div class="mt-6 text-center text-grayText">
-                <p>Não tem uma conta? <a href="#" id="showRegister" class="text-primary hover:text-purple-400">Registre-se</a></p>
-            </div>
-        </div>
-        
-        <!-- Mensagem de Erro -->
-        <div id="errorMessage" class="bg-red-500 text-white p-4 rounded-lg mt-4 hidden"></div>
-    </div>
-    
-    <!-- Modal de Registro -->
-    <div id="registerModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-darkPanel border border-darkBorder rounded-lg p-8 shadow-lg w-full max-w-md">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-2xl font-semibold">Criar Conta</h2>
-                <button id="closeRegister" class="text-grayText hover:text-white">
-                    <i class="ph ph-x text-xl"></i>
-                </button>
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="bg-darkPanel border border-darkBorder rounded-lg p-8 w-full max-w-md">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-primary">WorkManager</h1>
+                <p class="text-grayText mt-2">Sistema de Gestão para Construtoras</p>
             </div>
             
-            <form id="registerForm" class="space-y-6">
-                <div>
-                    <label for="registerName" class="block text-grayText mb-2">Nome Completo</label>
-                    <input type="text" id="registerName" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary" required>
+            <div id="loginForm">
+                <h2 class="text-xl font-semibold mb-6">Entrar na sua conta</h2>
+                
+                <div id="loginError" class="bg-red-900/30 border border-red-800 text-red-200 px-4 py-3 rounded-lg mb-4 hidden">
+                    Credenciais inválidas. Por favor, tente novamente.
                 </div>
                 
-                <div>
-                    <label for="registerEmail" class="block text-grayText mb-2">Email</label>
-                    <input type="email" id="registerEmail" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary" required>
-                </div>
+                <form id="login-form" class="space-y-4">
+                    <div>
+                        <label for="email" class="block text-grayText mb-1">Email</label>
+                        <input type="email" id="email" name="email" 
+                            class="w-full px-4 py-2 rounded-lg bg-darkBg border border-darkBorder focus:border-primary focus:outline-none"
+                            required>
+                    </div>
+                    
+                    <div>
+                        <label for="password" class="block text-grayText mb-1">Senha</label>
+                        <input type="password" id="password" name="password" 
+                            class="w-full px-4 py-2 rounded-lg bg-darkBg border border-darkBorder focus:border-primary focus:outline-none"
+                            required>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <input type="checkbox" id="remember" name="remember" class="mr-2">
+                            <label for="remember" class="text-grayText">Lembrar-me</label>
+                        </div>
+                        <a href="#" class="text-primary hover:underline">Esqueceu a senha?</a>
+                    </div>
+                    
+                    <button type="submit" 
+                        class="w-full bg-primary hover:bg-purple-600 text-white py-2 px-4 rounded-lg transition-colors">
+                        Entrar
+                    </button>
+                </form>
                 
-                <div>
-                    <label for="registerPassword" class="block text-grayText mb-2">Senha</label>
-                    <input type="password" id="registerPassword" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary" required>
+                <div class="mt-6 text-center">
+                    <p class="text-grayText">
+                        Não tem uma conta? 
+                        <a href="#" id="showRegister" class="text-primary hover:underline">Registre-se</a>
+                    </p>
                 </div>
-                
-                <div>
-                    <label for="confirmPassword" class="block text-grayText mb-2">Confirmar Senha</label>
-                    <input type="password" id="confirmPassword" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary" required>
-                </div>
-                
-                <button type="submit" class="w-full bg-primary hover:bg-purple-700 py-3 rounded-lg font-medium transition-colors">
-                    Registrar
-                </button>
-            </form>
+            </div>
             
-            <!-- Mensagem de Erro do Registro -->
-            <div id="registerErrorMessage" class="bg-red-500 text-white p-4 rounded-lg mt-4 hidden"></div>
+            <div id="registerForm" class="hidden">
+                <h2 class="text-xl font-semibold mb-6">Criar nova conta</h2>
+                
+                <div id="registerError" class="bg-red-900/30 border border-red-800 text-red-200 px-4 py-3 rounded-lg mb-4 hidden">
+                    Erro ao criar conta. Por favor, tente novamente.
+                </div>
+                
+                <form id="register-form" class="space-y-4">
+                    <div>
+                        <label for="register-name" class="block text-grayText mb-1">Nome completo</label>
+                        <input type="text" id="register-name" name="name" 
+                            class="w-full px-4 py-2 rounded-lg bg-darkBg border border-darkBorder focus:border-primary focus:outline-none"
+                            required>
+                    </div>
+                    
+                    <div>
+                        <label for="register-email" class="block text-grayText mb-1">Email</label>
+                        <input type="email" id="register-email" name="email" 
+                            class="w-full px-4 py-2 rounded-lg bg-darkBg border border-darkBorder focus:border-primary focus:outline-none"
+                            required>
+                    </div>
+                    
+                    <div>
+                        <label for="register-password" class="block text-grayText mb-1">Senha</label>
+                        <input type="password" id="register-password" name="password" 
+                            class="w-full px-4 py-2 rounded-lg bg-darkBg border border-darkBorder focus:border-primary focus:outline-none"
+                            required>
+                    </div>
+                    
+                    <div>
+                        <label for="register-confirm-password" class="block text-grayText mb-1">Confirmar senha</label>
+                        <input type="password" id="register-confirm-password" name="confirmPassword" 
+                            class="w-full px-4 py-2 rounded-lg bg-darkBg border border-darkBorder focus:border-primary focus:outline-none"
+                            required>
+                    </div>
+                    
+                    <button type="submit" 
+                        class="w-full bg-primary hover:bg-purple-600 text-white py-2 px-4 rounded-lg transition-colors">
+                        Registrar
+                    </button>
+                </form>
+                
+                <div class="mt-6 text-center">
+                    <p class="text-grayText">
+                        Já tem uma conta? 
+                        <a href="#" id="showLogin" class="text-primary hover:underline">Entrar</a>
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -126,62 +137,62 @@
         document.addEventListener('DOMContentLoaded', () => {
             // Verificar se já está autenticado
             if (auth.isAuthenticated()) {
-                window.location.href = '/home.html';
+                window.location.href = 'home.html';
+                return;
             }
             
+            // Alternar entre login e registro
+            document.getElementById('showRegister').addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('loginForm').classList.add('hidden');
+                document.getElementById('registerForm').classList.remove('hidden');
+            });
+            
+            document.getElementById('showLogin').addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('registerForm').classList.add('hidden');
+                document.getElementById('loginForm').classList.remove('hidden');
+            });
+            
             // Formulário de login
-            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            document.getElementById('login-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
-                const errorMessage = document.getElementById('errorMessage');
                 
                 try {
-                    errorMessage.classList.add('hidden');
                     await auth.login(email, password);
-                    window.location.href = '/home.html';
+                    window.location.href = 'home.html';
                 } catch (error) {
-                    errorMessage.textContent = error.message || 'Falha no login. Verifique suas credenciais.';
-                    errorMessage.classList.remove('hidden');
+                    document.getElementById('loginError').classList.remove('hidden');
+                    console.error('Erro de login:', error);
                 }
             });
             
-            // Mostrar modal de registro
-            document.getElementById('showRegister').addEventListener('click', (e) => {
-                e.preventDefault();
-                document.getElementById('registerModal').classList.remove('hidden');
-            });
-            
-            // Fechar modal de registro
-            document.getElementById('closeRegister').addEventListener('click', () => {
-                document.getElementById('registerModal').classList.add('hidden');
-            });
-            
             // Formulário de registro
-            document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            document.getElementById('register-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
-                const name = document.getElementById('registerName').value;
-                const email = document.getElementById('registerEmail').value;
-                const password = document.getElementById('registerPassword').value;
-                const confirmPassword = document.getElementById('confirmPassword').value;
-                const errorMessage = document.getElementById('registerErrorMessage');
+                const name = document.getElementById('register-name').value;
+                const email = document.getElementById('register-email').value;
+                const password = document.getElementById('register-password').value;
+                const confirmPassword = document.getElementById('register-confirm-password').value;
                 
                 // Validar senhas
                 if (password !== confirmPassword) {
-                    errorMessage.textContent = 'As senhas não coincidem.';
-                    errorMessage.classList.remove('hidden');
+                    document.getElementById('registerError').textContent = 'As senhas não coincidem.';
+                    document.getElementById('registerError').classList.remove('hidden');
                     return;
                 }
                 
                 try {
-                    errorMessage.classList.add('hidden');
                     await auth.register({ name, email, password });
-                    window.location.href = '/home.html';
+                    window.location.href = 'home.html';
                 } catch (error) {
-                    errorMessage.textContent = error.message || 'Falha no registro. Tente novamente.';
-                    errorMessage.classList.remove('hidden');
+                    document.getElementById('registerError').textContent = error.message || 'Erro ao criar conta.';
+                    document.getElementById('registerError').classList.remove('hidden');
+                    console.error('Erro de registro:', error);
                 }
             });
         });

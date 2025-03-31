@@ -43,6 +43,14 @@ class ApiMock {
         
         console.log(`[API Mock] ${method} ${url}`, body);
         
+        // Verificar autenticação para rotas protegidas
+        if (!url.startsWith('/api/auth/')) {
+            const authHeader = options.headers?.Authorization;
+            if (!authHeader || !authHeader.startsWith('Bearer ')) {
+                return this.createResponse(401, { message: 'Não autorizado' });
+            }
+        }
+        
         // Simular latência de rede
         return new Promise(resolve => {
             setTimeout(() => {
@@ -255,23 +263,22 @@ class ApiMock {
     
     // Criar nova tarefa
     createTask(taskData) {
-        const tasks = JSON.parse(localStorage.getItem('mockTasks') || '[]');
-        
-        // Validar dados
-        if (!taskData || !taskData.title || !taskData.description || !taskData.status || !taskData.priority || !taskData.projectId || !taskData.assigneeId || !taskData.dueDate) {
-            return this.createResponse(400, { message: 'Dados incompletos' });
+        if (!taskData || !taskData.title) {
+            return this.createResponse(400, { message: 'Título da tarefa é obrigatório' });
         }
+        
+        const tasks = JSON.parse(localStorage.getItem('mockTasks') || '[]');
         
         // Criar nova tarefa
         const newTask = {
             id: Date.now().toString(),
             title: taskData.title,
-            description: taskData.description,
-            status: taskData.status,
-            priority: taskData.priority,
-            projectId: taskData.projectId,
-            assigneeId: taskData.assigneeId,
-            dueDate: taskData.dueDate,
+            description: taskData.description || '',
+            status: taskData.status || 'todo',
+            priority: taskData.priority || 'medium',
+            projectId: taskData.projectId || null,
+            assigneeId: taskData.assigneeId || null,
+            dueDate: taskData.dueDate || null,
             createdAt: new Date().toISOString()
         };
         
@@ -280,6 +287,75 @@ class ApiMock {
         localStorage.setItem('mockTasks', JSON.stringify(tasks));
         
         return this.createResponse(201, newTask);
+    }
+    
+    // Atualizar tarefa
+    updateTask(taskId, taskData) {
+        if (!taskData || !taskData.title) {
+            return this.createResponse(400, { message: 'Título da tarefa é obrigatório' });
+        }
+        
+        const tasks = JSON.parse(localStorage.getItem('mockTasks') || '[]');
+        const taskIndex = tasks.findIndex(t => t.id === taskId);
+        
+        if (taskIndex === -1) {
+            return this.createResponse(404, { message: 'Tarefa não encontrada' });
+        }
+        
+        // Atualizar tarefa
+        tasks[taskIndex] = {
+            ...tasks[taskIndex],
+            ...taskData,
+            id: taskId, // Garantir que o ID não seja alterado
+            updatedAt: new Date().toISOString()
+        };
+        
+        localStorage.setItem('mockTasks', JSON.stringify(tasks));
+        
+        return this.createResponse(200, tasks[taskIndex]);
+    }
+    
+    // Atualizar parcialmente tarefa
+    patchTask(taskId, taskData) {
+        const tasks = JSON.parse(localStorage.getItem('mockTasks') || '[]');
+        const taskIndex = tasks.findIndex(t => t.id === taskId);
+        
+        if (taskIndex === -1) {
+            return this.createResponse(404, { message: 'Tarefa não encontrada' });
+        }
+        
+        // Atualizar campos fornecidos
+        tasks[taskIndex] = {
+            ...tasks[taskIndex],
+            ...taskData,
+            id: taskId, // Garantir que o ID não seja alterado
+            updatedAt: new Date().toISOString()
+        };
+        
+        // Se o status for alterado para 'done', adicionar data de conclusão
+        if (taskData.status === 'done' && tasks[taskIndex].status === 'done') {
+            tasks[taskIndex].completedAt = new Date().toISOString();
+        }
+        
+        localStorage.setItem('mockTasks', JSON.stringify(tasks));
+        
+        return this.createResponse(200, tasks[taskIndex]);
+    }
+    
+    // Excluir tarefa
+    deleteTask(taskId) {
+        const tasks = JSON.parse(localStorage.getItem('mockTasks') || '[]');
+        const taskIndex = tasks.findIndex(t => t.id === taskId);
+        
+        if (taskIndex === -1) {
+            return this.createResponse(404, { message: 'Tarefa não encontrada' });
+        }
+        
+        // Remover tarefa
+        tasks.splice(taskIndex, 1);
+        localStorage.setItem('mockTasks', JSON.stringify(tasks));
+        
+        return this.createResponse(204);
     }
     
     // Manipular rotas de projetos
@@ -310,15 +386,22 @@ class ApiMock {
                 return this.updateProject(projectId, body);
             }
             
+            // Atualizar parcialmente projeto
+            if (method === 'PATCH') {
+                return this.patchProject(projectId, body);
+            }
+            
             // Excluir projeto
             if (method === 'DELETE') {
                 return this.deleteProject(projectId);
             }
-            
-            // Obter tarefas do projeto
-            if (url.endsWith('/tasks') && method === 'GET') {
-                return this.getProjectTasks(projectId);
-            }
+        }
+        
+        // Obter tarefas de um projeto
+        const projectTasksMatch = url.match(/\/api\/projects\/([^\/]+)\/tasks$/);
+        if (projectTasksMatch && method === 'GET') {
+            const projectId = projectTasksMatch[1];
+            return this.getProjectTasks(projectId);
         }
         
         return this.createResponse(404, { message: 'Rota de projetos não encontrada' });
@@ -335,3 +418,246 @@ class ApiMock {
         
         return this.createResponse(200, project);
     }
+    
+    // Criar novo projeto
+    createProject(projectData) {
+        if (!projectData || !projectData.name) {
+            return this.createResponse(400, { message: 'Nome do projeto é obrigatório' });
+        }
+        
+        const projects = JSON.parse(localStorage.getItem('mockProjects') || '[]');
+        
+        // Criar novo projeto
+        const newProject = {
+            id: Date.now().toString(),
+            name: projectData.name,
+            description: projectData.description || '',
+            status: projectData.status || 'planning',
+            createdAt: new Date().toISOString()
+        };
+        
+        // Adicionar à lista de projetos
+        projects.push(newProject);
+        localStorage.setItem('mockProjects', JSON.stringify(projects));
+        
+        return this.createResponse(201, newProject);
+    }
+    
+    // Atualizar projeto
+    updateProject(projectId, projectData) {
+        if (!projectData || !projectData.name) {
+            return this.createResponse(400, { message: 'Nome do projeto é obrigatório' });
+        }
+        
+        const projects = JSON.parse(localStorage.getItem('mockProjects') || '[]');
+        const projectIndex = projects.findIndex(p => p.id === projectId);
+        
+        if (projectIndex === -1) {
+            return this.createResponse(404, { message: 'Projeto não encontrado' });
+        }
+        
+        // Atualizar projeto
+        projects[projectIndex] = {
+            ...projects[projectIndex],
+            ...projectData,
+            id: projectId, // Garantir que o ID não seja alterado
+            updatedAt: new Date().toISOString()
+        };
+        
+        localStorage.setItem('mockProjects', JSON.stringify(projects));
+        
+        return this.createResponse(200, projects[projectIndex]);
+    }
+    
+    // Atualizar parcialmente projeto
+    patchProject(projectId, projectData) {
+        const projects = JSON.parse(localStorage.getItem('mockProjects') || '[]');
+        const projectIndex = projects.findIndex(p => p.id === projectId);
+        
+        if (projectIndex === -1) {
+            return this.createResponse(404, { message: 'Projeto não encontrado' });
+        }
+        
+        // Atualizar campos fornecidos
+        projects[projectIndex] = {
+            ...projects[projectIndex],
+            ...projectData,
+            id: projectId, // Garantir que o ID não seja alterado
+            updatedAt: new Date().toISOString()
+        };
+        
+        localStorage.setItem('mockProjects', JSON.stringify(projects));
+        
+        return this.createResponse(200, projects[projectIndex]);
+    }
+    
+    // Excluir projeto
+    deleteProject(projectId) {
+        const projects = JSON.parse(localStorage.getItem('mockProjects') || '[]');
+        const projectIndex = projects.findIndex(p => p.id === projectId);
+        
+        if (projectIndex === -1) {
+            return this.createResponse(404, { message: 'Projeto não encontrado' });
+        }
+        
+        // Remover projeto
+        projects.splice(projectIndex, 1);
+        localStorage.setItem('mockProjects', JSON.stringify(projects));
+        
+        // Também remover tarefas associadas ao projeto
+        const tasks = JSON.parse(localStorage.getItem('mockTasks') || '[]');
+        const updatedTasks = tasks.filter(task => task.projectId !== projectId);
+        localStorage.setItem('mockTasks', JSON.stringify(updatedTasks));
+        
+        return this.createResponse(204);
+    }
+    
+    // Obter tarefas de um projeto
+    getProjectTasks(projectId) {
+        const tasks = JSON.parse(localStorage.getItem('mockTasks') || '[]');
+        const projectTasks = tasks.filter(task => task.projectId === projectId);
+        
+        return this.createResponse(200, projectTasks);
+    }
+    
+    // Manipular rotas de usuários
+    handleUserRoutes(url, method, body, options) {
+        // Obter todos os usuários
+        if (url === '/api/users' && method === 'GET') {
+            return this.getUsers();
+        }
+        
+        // Obter usuário atual
+        if (url === '/api/users/me' && method === 'GET') {
+            return this.getCurrentUser(options);
+        }
+        
+        // Extrair ID do usuário da URL
+        const userIdMatch = url.match(/\/api\/users\/([^\/]+)$/);
+        if (userIdMatch) {
+            const userId = userIdMatch[1];
+            
+            // Obter usuário específico
+            if (method === 'GET') {
+                return this.getUserById(userId);
+            }
+            
+            // Atualizar usuário
+            if (method === 'PUT' || method === 'PATCH') {
+                return this.updateUser(userId, body);
+            }
+            
+            // Excluir usuário
+            if (method === 'DELETE') {
+                return this.deleteUser(userId);
+            }
+        }
+        
+        return this.createResponse(404, { message: 'Rota de usuários não encontrada' });
+    }
+    
+    // Obter todos os usuários
+    getUsers() {
+        const users = JSON.parse(localStorage.getItem('mockUsers') || '[]');
+        
+        // Remover senhas dos usuários
+        const usersWithoutPasswords = users.map(user => {
+            const { password, ...userWithoutPassword } = user;
+            return userWithoutPassword;
+        });
+        
+        return this.createResponse(200, usersWithoutPasswords);
+    }
+    
+    // Obter usuário atual
+    getCurrentUser(options) {
+        // Extrair token do cabeçalho de autorização
+        const authHeader = options.headers.Authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return this.createResponse(401, { message: 'Não autorizado' });
+        }
+        
+        const token = authHeader.split(' ')[1];
+        
+        // Em uma implementação real, decodificaríamos o token JWT
+        // Aqui, apenas extraímos o payload simulado
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const userId = payload.sub;
+            
+            // Buscar usuário pelo ID
+            const users = JSON.parse(localStorage.getItem('mockUsers') || '[]');
+            const user = users.find(u => u.id === userId);
+            
+            if (!user) {
+                return this.createResponse(404, { message: 'Usuário não encontrado' });
+            }
+            
+            // Remover senha do objeto de usuário
+            const { password, ...userWithoutPassword } = user;
+            
+            return this.createResponse(200, userWithoutPassword);
+        } catch (error) {
+            return this.createResponse(401, { message: 'Token inválido' });
+        }
+    }
+    
+    // Obter usuário por ID
+    getUserById(userId) {
+        const users = JSON.parse(localStorage.getItem('mockUsers') || '[]');
+        const user = users.find(u => u.id === userId);
+        
+        if (!user) {
+            return this.createResponse(404, { message: 'Usuário não encontrado' });
+        }
+        
+        // Remover senha do objeto de usuário
+        const { password, ...userWithoutPassword } = user;
+        
+        return this.createResponse(200, userWithoutPassword);
+    }
+    
+    // Atualizar usuário
+    updateUser(userId, userData) {
+        const users = JSON.parse(localStorage.getItem('mockUsers') || '[]');
+        const userIndex = users.findIndex(u => u.id === userId);
+        
+        if (userIndex === -1) {
+            return this.createResponse(404, { message: 'Usuário não encontrado' });
+        }
+        
+        // Atualizar usuário
+        users[userIndex] = {
+            ...users[userIndex],
+            ...userData,
+            id: userId, // Garantir que o ID não seja alterado
+            updatedAt: new Date().toISOString()
+        };
+        
+        localStorage.setItem('mockUsers', JSON.stringify(users));
+        
+        // Remover senha do objeto de usuário
+        const { password, ...userWithoutPassword } = users[userIndex];
+        
+        return this.createResponse(200, userWithoutPassword);
+    }
+    
+    // Excluir usuário
+    deleteUser(userId) {
+        const users = JSON.parse(localStorage.getItem('mockUsers') || '[]');
+        const userIndex = users.findIndex(u => u.id === userId);
+        
+        if (userIndex === -1) {
+            return this.createResponse(404, { message: 'Usuário não encontrado' });
+        }
+        
+        // Remover usuário
+        users.splice(userIndex, 1);
+        localStorage.setItem('mockUsers', JSON.stringify(users));
+        
+        return this.createResponse(204);
+    }
+}
+
+// Inicializar API Mock
+const apiMock = new ApiMock();
