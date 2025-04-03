@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>WorkManager - Sistema de Gestão para Construtoras</title>
+    <script src="init-data.js"></script>
     <script src="api-mock.js"></script>
     <script src="auth.js"></script>
     <style>
@@ -51,4 +52,17 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // Verificar se o usuário está autenticado
+            setTimeout(() => {
+                if (auth.isAuthenticated()) {
+                    // Redirecionar para a página inicial
+                    window.location.href = 'home.html';
+                } else {
+                    // Redirecionar para a página de login
+                    window.location.href = 'login.html';
+                }
+            }, 1000); // Pequeno atraso para mostrar a animação
         });
+    </script>
+</body>
+</html>

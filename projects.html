@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerenciar Projetos - Construtora</title>
+    <title>Projetos - WorkManager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script>
@@ -27,18 +27,29 @@
     </script>
     <style>
         .sidebar {
-            width: 4rem;
+            width: 5rem;
             transition: width 0.3s ease;
         }
         .sidebar.expanded {
-            width: 12rem;
+            width: 15rem;
         }
-        .sidebar.expanded .sidebar-link {
-            justify-content: flex-start;
-            padding-left: 1.5rem;
+        .panel {
+            @apply bg-darkPanel border-darkBorder;
         }
-        .sidebar.expanded .sidebar-text {
-            display: block;
+        .status-planning {
+            @apply bg-blue-500/20 text-blue-300 border-blue-500;
+        }
+        .status-in-progress {
+            @apply bg-yellow-500/20 text-yellow-300 border-yellow-500;
+        }
+        .status-on-hold {
+            @apply bg-orange-500/20 text-orange-300 border-orange-500;
+        }
+        .status-completed {
+            @apply bg-green-500/20 text-green-300 border-green-500;
+        }
+        .status-cancelled {
+            @apply bg-red-500/20 text-red-300 border-red-500;
         }
     </style>
 </head>
@@ -48,36 +59,34 @@
     <div class="flex h-screen">
 
         <!-- Sidebar -->
-        <aside class="sidebar flex flex-col items-center py-6 border-r transition-colors duration-300 bg-darkPanel border-darkBorder">
-            <button id="toggleSidebar" class="text-grayText hover:text-white mb-6">
-                <i class="ph ph-list text-xl"></i>
+        <aside class="sidebar bg-darkPanel flex flex-col items-center py-6 border-r border-darkBorder">
+            <button id="toggleSidebar" class="text-grayText text-2xl mb-6">
+                <i class="ph ph-list"></i>
             </button>
-            <nav class="flex flex-col space-y-6 w-full">
-                <a href="home.html" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
-                    <i class="ph ph-house text-xl"></i>
-                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Início</span>
+            <nav class="flex flex-col space-y-6">
+                <a href="home.html" class="text-grayText hover:text-white text-2xl">
+                    <i class="ph ph-house"></i>
+                    <span class="hidden ml-3 text-base">Início</span>
                 </a>
-                <a href="dashboard.html" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
-                    <i class="ph ph-chart-bar text-xl"></i>
-                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Dashboard</span>
+                <a href="backlog.html" class="text-grayText hover:text-white text-2xl">
+                    <i class="ph ph-kanban"></i>
+                    <span class="hidden ml-3 text-base">Backlog</span>
                 </a>
-                <a href="backlog.html" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
-                    <i class="ph ph-kanban text-xl"></i>
-                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Backlog</span>
+                <a href="projects.html" class="text-primary hover:text-white text-2xl">
+                    <i class="ph ph-buildings"></i>
+                    <span class="hidden ml-3 text-base">Projetos</span>
                 </a>
-                <a href="projects.html" class="text-primary hover:text-white flex items-center justify-center sidebar-link">
-                    <i class="ph ph-buildings text-xl"></i>
-                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Projetos</span>
-                </a>
-                <a href="#" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
-                    <i class="ph ph-calendar text-xl"></i>
-                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Agenda</span>
-                </a>
-                <a href="#" class="text-grayText hover:text-white flex items-center justify-center sidebar-link">
-                    <i class="ph ph-gear text-xl"></i>
-                    <span class="ml-3 sidebar-text whitespace-nowrap hidden">Configurações</span>
+                <a href="settings.html" class="text-grayText hover:text-white text-2xl">
+                    <i class="ph ph-gear"></i>
+                    <span class="hidden ml-3 text-base">Configurações</span>
                 </a>
             </nav>
+            <div class="mt-auto">
+                <button id="logoutBtn" class="text-grayText hover:text-white text-2xl">
+                    <i class="ph ph-sign-out"></i>
+                    <span class="hidden ml-3 text-base">Sair</span>
+                </button>
+            </div>
         </aside>
 
         <!-- Conteúdo Principal -->
@@ -86,203 +95,1101 @@
             <!-- Header -->
             <header class="flex justify-between items-center mb-6">
                 <div>
-                    <h1 class="text-3xl font-semibold">Gerenciar Projetos</h1>
+                    <h1 class="text-3xl font-semibold">Projetos</h1>
                     <p class="text-grayText" id="current-date"></p>
                 </div>
-                <div class="flex space-x-4">
-                    <button id="newProjectBtn" class="bg-primary hover:bg-purple-700 px-4 py-2 rounded-lg flex items-center">
-                        <i class="ph ph-plus mr-2"></i> Novo Projeto
+                <div class="flex items-center space-x-4">
+                    <button id="toggleDarkMode" class="bg-transparent text-2xl">
+                        <i class="ph ph-moon"></i>
                     </button>
-                    <button id="toggleDarkMode" class="bg-transparent">
-                        <i class="ph ph-moon text-xl"></i>
-                    </button>
+                    <div class="relative" id="userProfile">
+                        <button class="flex items-center space-x-2 bg-darkPanel px-3 py-2 rounded-lg border border-darkBorder">
+                            <span id="userInitials" class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center font-medium"></span>
+                            <span id="userName">Carregando...</span>
+                            <i class="ph ph-caret-down text-grayText"></i>
+                        </button>
+                        <!-- Dropdown menu -->
+                        <div class="absolute right-0 mt-2 w-48 bg-darkPanel border border-darkBorder rounded-lg shadow-lg hidden dropdown-menu" id="userDropdown">
+                            <ul class="py-2">
+                                <li><a href="profile.html" class="block px-4 py-2 hover:bg-darkBorder">Meu Perfil</a></li>
+                                <li><a href="settings.html" class="block px-4 py-2 hover:bg-darkBorder">Configurações</a></li>
+                                <li><hr class="my-1 border-darkBorder"></li>
+                                <li><button id="logoutBtnDropdown" class="block w-full text-left px-4 py-2 hover:bg-darkBorder text-red-400">Sair</button></li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </header>
 
-            <!-- Lista de Projetos -->
-            <div class="panel p-6 rounded-lg border bg-darkPanel border-darkBorder mb-8">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-semibold">Projetos</h2>
-                    <div class="flex space-x-2">
-                        <div class="relative">
-                            <input type="text" id="searchProjects" placeholder="Buscar projetos..." class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-primary">
-                            <i class="ph ph-magnifying-glass absolute left-3 top-3 text-grayText"></i>
-                        </div>
-                        <select id="filterStatus" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
-                            <option value="">Todos os status</option>
-                            <option value="Em andamento">Em andamento</option>
-                            <option value="Planejamento">Planejamento</option>
-                            <option value="Atrasado">Atrasado</option>
-                            <option value="Concluído">Concluído</option>
-                        </select>
+            <!-- Barra de ferramentas -->
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex space-x-2">
+                    <div class="relative">
+                        <input type="text" id="searchProjects" placeholder="Buscar projetos..." 
+                            class="bg-darkPanel border border-darkBorder rounded-lg px-4 py-2 pl-10 focus:outline-none focus:border-primary">
+                        <i class="ph ph-magnifying-glass absolute left-3 top-2.5 text-grayText"></i>
                     </div>
+                    <select id="filterStatus" class="bg-darkPanel border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary">
+                        <option value="">Todos os status</option>
+                        <option value="planning">Planejamento</option>
+                        <option value="in-progress">Em andamento</option>
+                        <option value="on-hold">Em espera</option>
+                        <option value="completed">Concluído</option>
+                        <option value="cancelled">Cancelado</option>
+                    </select>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead>
-                            <tr class="text-left text-grayText border-b border-darkBorder">
-                                <th class="pb-3">Projeto</th>
-                                <th class="pb-3">Cliente</th>
-                                <th class="pb-3">Status</th>
-                                <th class="pb-3">Progresso</th>
-                                <th class="pb-3">Prazo</th>
-                                <th class="pb-3">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="projectsTableBody">
-                            <!-- Dados serão carregados via JavaScript -->
-                        </tbody>
-                    </table>
+                <button id="newProjectBtn" class="bg-primary hover:bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center">
+                    <i class="ph ph-plus mr-2"></i> Novo Projeto
+                </button>
+            </div>
+
+            <!-- Lista de Projetos -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="projectsList">
+                <div class="animate-pulse">
+                    <div class="bg-darkPanel border border-darkBorder rounded-lg p-6 h-64"></div>
                 </div>
-                <div id="loadingProjects" class="py-4 text-center hidden">
-                    <i class="ph ph-spinner animate-spin text-2xl"></i>
-                    <p class="text-grayText mt-2">Carregando projetos...</p>
+                <div class="animate-pulse">
+                    <div class="bg-darkPanel border border-darkBorder rounded-lg p-6 h-64"></div>
                 </div>
-                <div id="noProjectsFound" class="py-8 text-center hidden">
-                    <i class="ph ph-folder-notch-open text-4xl text-grayText"></i>
-                    <p class="text-grayText mt-2">Nenhum projeto encontrado</p>
+                <div class="animate-pulse">
+                    <div class="bg-darkPanel border border-darkBorder rounded-lg p-6 h-64"></div>
+                </div>
+            </div>
+
+            <!-- Modal de Novo Projeto -->
+            <div id="newProjectModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+                <div class="bg-darkPanel border border-darkBorder rounded-lg p-6 w-full max-w-md">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold">Novo Projeto</h2>
+                        <button id="closeNewProjectModal" class="text-grayText hover:text-white">
+                            <i class="ph ph-x text-xl"></i>
+                        </button>
+                    </div>
+                    <form id="newProjectForm">
+                        <div class="mb-4">
+                            <label for="projectName" class="block text-grayText mb-1">Nome do Projeto</label>
+                            <input type="text" id="projectName" name="name" required
+                                class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary">
+                        </div>
+                        <div class="mb-4">
+                            <label for="projectDescription" class="block text-grayText mb-1">Descrição</label>
+                            <textarea id="projectDescription" name="description" rows="3"
+                                class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary"></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label for="projectStatus" class="block text-grayText mb-1">Status</label>
+                            <select id="projectStatus" name="status"
+                                class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary">
+                                <option value="planning">Planejamento</option>
+                                <option value="in-progress">Em andamento</option>
+                                <option value="on-hold">Em espera</option>
+                            </select>
+                        </div>
+                        <div class="flex justify-end space-x-2">
+                            <button type="button" id="cancelNewProject"
+                                class="px-4 py-2 border border-darkBorder rounded-lg hover:bg-darkBorder">
+                                Cancelar
+                            </button>
+                            <button type="submit"
+                                class="bg-primary hover:bg-purple-600 text-white px-4 py-2 rounded-lg">
+                                Criar Projeto
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modal de Detalhes do Projeto -->
+            <div id="projectDetailsModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+                <div class="bg-darkPanel border border-darkBorder rounded-lg p-6 w-full max-w-2xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold" id="detailsProjectName">Detalhes do Projeto</h2>
+                        <button id="closeProjectDetailsModal" class="text-grayText hover:text-white">
+                            <i class="ph ph-x text-xl"></i>
+                        </button>
+                    </div>
+                    <div id="projectDetailsContent">
+                        <div class="animate-pulse">
+                            <div class="h-6 bg-darkBg rounded w-3/4 mb-4"></div>
+                            <div class="h-4 bg-darkBg rounded w-1/2 mb-2"></div>
+                            <div class="h-4 bg-darkBg rounded w-full mb-4"></div>
+                            <div class="h-32 bg-darkBg rounded w-full mb-4"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
-    <!-- Modal para Adicionar/Editar Projeto -->
-    <div id="projectModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-darkPanel border border-darkBorder rounded-lg p-6 w-full max-w-2xl">
-            <div class="flex justify-between items-center mb-6">
-                <h2 id="modalTitle" class="text-xl font-semibold">Novo Projeto</h2>
-                <button id="closeModal" class="text-grayText hover:text-white">
-                    <i class="ph ph-x text-xl"></i>
-                </button>
-            </div>
-            <form id="projectForm">
-                <input type="hidden" id="projectId">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label for="projectName" class="block text-grayText mb-2">Nome do Projeto</label>
-                        <input type="text" id="projectName" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary" required>
-                    </div>
-                    <div>
-                        <label for="clientName" class="block text-grayText mb-2">Cliente</label>
-                        <input type="text" id="clientName" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary" required>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label for="projectType" class="block text-grayText mb-2">Tipo de Projeto</label>
-                        <select id="projectType" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
-                            <option value="building">Edifício</option>
-                            <option value="house">Residencial</option>
-                            <option value="commercial">Comercial</option>
-                            <option value="infrastructure">Infraestrutura</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="projectStatus" class="block text-grayText mb-2">Status</label>
-                        <select id="projectStatus" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary">
-                            <option value="Planejamento">Planejamento</option>
-                            <option value="Em andamento">Em andamento</option>
-                            <option value="Atrasado">Atrasado</option>
-                            <option value="Concluído">Concluído</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label for="projectProgress" class="block text-grayText mb-2">Progresso (%)</label>
-                        <input type="number" id="projectProgress" min="0" max="100" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary" required>
-                    </div>
-                    <div>
-                        <label for="projectDeadline" class="block text-grayText mb-2">Prazo</label>
-                        <input type="date" id="projectDeadline" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary" required>
-                    </div>
-                </div>
-                <div class="mb-4">
-                    <label for="projectDescription" class="block text-grayText mb-2">Descrição</label>
-                    <textarea id="projectDescription" rows="4" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
-                </div>
-                <div class="mb-4">
-                    <label for="projectBudget" class="block text-grayText mb-2">Orçamento (R$)</label>
-                    <input type="number" id="projectBudget" min="0" step="0.01" class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary" required>
-                </div>
-                <div class="flex justify-end space-x-3 mt-6">
-                    <button type="button" id="cancelProject" class="px-4 py-2 border border-darkBorder rounded-lg hover:bg-darkBg">Cancelar</button>
-                    <button type="submit" class="bg-primary hover:bg-purple-700 px-4 py-2 rounded-lg">Salvar Projeto</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
+    <!-- Scripts -->
+    <script src="init-data.js"></script>
+    <script src="api-mock.js"></script>
+    <script src="auth.js"></script>
+    <script src="theme.js"></script>
+    <script src="sidebar.js"></script>
     <script>
-        // Funções para manipulação da barra lateral e tema
-        const body = document.body;
-        const darkModeToggle = document.getElementById('toggleDarkMode');
-        const darkModeIcon = darkModeToggle.querySelector('i');
-
-        // Carregar tema salvo
-        const savedTheme = localStorage.getItem('theme') || 'dark';
-        applyTheme(savedTheme);
-
-        darkModeToggle.addEventListener('click', () => {
-            const newTheme = body.classList.contains('bg-darkBg') ? 'light' : 'dark';
-            applyTheme(newTheme);
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Verificar autenticação
+            if (!auth.isAuthenticated()) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Carregar dados do usuário
+            const currentUser = auth.getCurrentUser();
+            if (currentUser) {
+                document.getElementById('userName').textContent = currentUser.name;
+                
+                // Iniciais do usuário
+                const initials = currentUser.name.split(' ')
+                    .map(name => name[0])
+                    .slice(0, 2)
+                    .join('')
+                    .toUpperCase();
+                document.getElementById('userInitials').textContent = initials;
+            }
+            
+            // Atualizar data
+            updateCurrentDate();
+            
+            // Configurar eventos
+            setupEventListeners();
+            
+            // Carregar projetos
+            await loadProjects();
         });
-
-        function applyTheme(theme) {
-            if (theme === 'light') {
-                body.classList.remove('bg-darkBg', 'text-white');
-                body.classList.add('bg-lightBg', 'text-lightText');
-
-                document.querySelectorAll('.panel').forEach(panel => {
-                    panel.classList.remove('bg-darkPanel', 'border-darkBorder');
-                    panel.classList.add('bg-lightPanel', 'border-lightBorder');
-                });
-
-                // Atualizar a barra lateral para o tema claro
-                const sidebar = document.querySelector('.sidebar');
-                sidebar.classList.remove('bg-darkPanel', 'border-darkBorder');
-                sidebar.classList.add('bg-lightPanel', 'border-lightBorder');
-
-                // Atualizar o modal
-                const modal = document.getElementById('projectModal').querySelector('div');
-                modal.classList.remove('bg-darkPanel', 'border-darkBorder');
-                modal.classList.add('bg-lightPanel', 'border-lightBorder');
-
-                // Atualizar inputs
-                document.querySelectorAll('input, select, textarea').forEach(input => {
-                    input.classList.remove('bg-darkBg', 'border-darkBorder');
-                    input.classList.add('bg-white', 'border-lightBorder');
-                });
-
-                darkM
-                darkModeIcon.classList.remove('ph-moon', 'text-white');
-            }
-            else {
-                body.classList.remove('bg-lightBg', 'text-lightText');
-                body.classList.add('bg-darkBg', 'text-white');
-
-                document.querySelectorAll('.panel').forEach(panel => {
-                    panel.classList.remove('bg-lightPanel', 'border-lightBorder');
-                    panel.classList.add('bg-darkPanel', 'border-darkBorder');
-                });
-
-                // Atualizar a barra lateral para o tema escuro
-                const sidebar = document.querySelector('.sidebar');
-                sidebar.classList.remove('bg-lightPanel', 'border-lightBorder');
-                sidebar.classList.add('bg-darkPanel', 'border-darkBorder');
-
-                // Atualizar o modal
-                const modal = document.getElementById('projectModal').querySelector('div');
-                modal.classList.remove('bg-lightPanel', 'border-lightBorder');
-                modal.classList.add('bg-darkPanel', 'border-darkBorder');
-
-                // Atualizar inputs
-                document.querySelectorAll('input, select, textarea').forEach(input => {
-                    input.classList.remove('bg-white', 'border-lightBorder');
-                    input.classList.add('bg-darkBg', 'border-darkBorder');
-                });
-
-                darkModeIcon.classList.add('ph-moon', 'text-white');
-            }
-            localStorage.setItem('theme', theme);
+        
+        // Atualizar data atual
+        function updateCurrentDate() {
+            const dateElement = document.getElementById('current-date');
+            if (!dateElement) return;
+            
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const currentDate = new Date().toLocaleDateString('pt-BR', options);
+            
+            dateElement.textContent = currentDate;
         }
+        
+        // Configurar eventos
+        function setupEventListeners() {
+            // Toggle user dropdown
+            const userProfile = document.getElementById('userProfile');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            if (userProfile && userDropdown) {
+                userProfile.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    userDropdown.classList.toggle('hidden');
+                });
+                
+                // Fechar dropdown ao clicar fora
+                document.addEventListener('click', () => {
+                    userDropdown.classList.add('hidden');
+                });
+            }
+            
+            // Logout do dropdown
+            const logoutBtnDropdown = document.getElementById('logoutBtnDropdown');
+            if (logoutBtnDropdown) {
+                logoutBtnDropdown.addEventListener('click', () => {
+                    auth.logout();
+                });
+            }
+            
+            // Abrir modal de novo projeto
+            document.getElementById('newProjectBtn').addEventListener('click', () => {
+                document.getElementById('newProjectModal').classList.remove('hidden');
+            });
+            
+
+            // Fechar modal de novo projeto
+            document.getElementById('closeNewProjectModal').addEventListener('click', () => {
+                document.getElementById('newProjectModal').classList.add('hidden');
+            });
+            
+            document.getElementById('cancelNewProject').addEventListener('click', () => {
+                document.getElementById('newProjectModal').classList.add('hidden');
+            });
+            
+            // Fechar modal de detalhes do projeto
+            document.getElementById('closeProjectDetailsModal').addEventListener('click', () => {
+                document.getElementById('projectDetailsModal').classList.add('hidden');
+            });
+            
+            // Formulário de novo projeto
+            document.getElementById('newProjectForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = {
+                    name: document.getElementById('projectName').value,
+                    description: document.getElementById('projectDescription').value,
+                    status: document.getElementById('projectStatus').value
+                };
+                
+                try {
+                    const response = await fetch('/api/projects', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${auth.getToken()}`
+                        },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Falha ao criar projeto');
+                    }
+                    
+                    const newProject = await response.json();
+                    
+                    // Fechar modal
+                    document.getElementById('newProjectModal').classList.add('hidden');
+                    
+                    // Limpar formulário
+                    document.getElementById('newProjectForm').reset();
+                    
+                    // Recarregar projetos
+                    await loadProjects();
+                    
+                } catch (error) {
+                    console.error('Erro ao criar projeto:', error);
+                    alert('Erro ao criar projeto. Por favor, tente novamente.');
+                }
+            });
+            
+            // Filtro de projetos
+            document.getElementById('searchProjects').addEventListener('input', filterProjects);
+            document.getElementById('filterStatus').addEventListener('change', filterProjects);
+        }
+        
+        // Carregar projetos
+        async function loadProjects() {
+            try {
+                const response = await fetch('/api/projects', {
+                    headers: {
+                        'Authorization': `Bearer ${auth.getToken()}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Falha ao carregar projetos');
+                }
+                
+                const projects = await response.json();
+                
+                renderProjects(projects);
+                
+            } catch (error) {
+                console.error('Erro ao carregar projetos:', error);
+                document.getElementById('projectsList').innerHTML = `
+                    <div class="col-span-full text-center py-8">
+                        <i class="ph ph-warning text-4xl text-yellow-500 mb-2"></i>
+                        <p class="text-grayText">Erro ao carregar projetos. Por favor, tente novamente.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Renderizar projetos
+        function renderProjects(projects) {
+            const projectsList = document.getElementById('projectsList');
+            
+            if (!projects || projects.length === 0) {
+                projectsList.innerHTML = `
+                    <div class="col-span-full text-center py-8">
+                        <i class="ph ph-buildings text-4xl text-grayText mb-2"></i>
+                        <p class="text-grayText">Nenhum projeto encontrado.</p>
+                        <button id="emptyStateNewProject" class="mt-4 bg-primary hover:bg-purple-600 text-white px-4 py-2 rounded-lg">
+                            <i class="ph ph-plus mr-2"></i> Criar Novo Projeto
+                        </button>
+                    </div>
+                `;
+                
+                document.getElementById('emptyStateNewProject').addEventListener('click', () => {
+                    document.getElementById('newProjectModal').classList.remove('hidden');
+                });
+                
+                return;
+            }
+            
+            projectsList.innerHTML = projects.map(project => {
+                // Formatar data de criação
+                const createdDate = new Date(project.createdAt);
+                const formattedDate = createdDate.toLocaleDateString('pt-BR');
+                
+                // Mapear status para texto em português
+                const statusMap = {
+                    'planning': 'Planejamento',
+                    'in-progress': 'Em andamento',
+                    'on-hold': 'Em espera',
+                    'completed': 'Concluído',
+                    'cancelled': 'Cancelado'
+                };
+                
+                const statusText = statusMap[project.status] || project.status;
+                
+                return `
+                    <div class="bg-darkPanel border border-darkBorder rounded-lg overflow-hidden hover:border-primary transition-colors" data-project-id="${project.id}">
+                        <div class="p-6">
+                            <h3 class="text-xl font-semibold mb-2">${project.name}</h3>
+                            <p class="text-grayText mb-4 line-clamp-2">${project.description || 'Sem descrição'}</p>
+                            <div class="flex justify-between items-center">
+                                <span class="status-${project.status} text-sm px-2 py-1 rounded-full border">
+                                    ${statusText}
+                                </span>
+                                <span class="text-sm text-grayText">Criado em ${formattedDate}</span>
+                            </div>
+                        </div>
+                        <div class="bg-darkBg/30 p-4 flex justify-between">
+                            <button class="text-grayText hover:text-white view-project" data-id="${project.id}">
+                                <i class="ph ph-eye"></i> Ver detalhes
+                            </button>
+                            <div class="flex space-x-2">
+                                <button class="text-grayText hover:text-white edit-project" data-id="${project.id}">
+                                    <i class="ph ph-pencil"></i>
+                                </button>
+                                <button class="text-grayText hover:text-red-400 delete-project" data-id="${project.id}">
+                                    <i class="ph ph-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Adicionar eventos aos botões
+            document.querySelectorAll('.view-project').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const projectId = e.currentTarget.dataset.id;
+                    viewProjectDetails(projectId);
+                });
+            });
+            
+            document.querySelectorAll('.edit-project').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const projectId = e.currentTarget.dataset.id;
+                    editProject(projectId);
+                });
+            });
+            
+            document.querySelectorAll('.delete-project').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const projectId = e.currentTarget.dataset.id;
+                    deleteProject(projectId);
+                });
+            });
+            
+            // Também adicionar evento de clique ao card inteiro
+            document.querySelectorAll('[data-project-id]').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    // Verificar se o clique não foi em um botão
+                    if (!e.target.closest('button')) {
+                        const projectId = card.dataset.projectId;
+                        viewProjectDetails(projectId);
+                    }
+                });
+            });
+        }
+        
+        // Filtrar projetos
+        function filterProjects() {
+            const searchTerm = document.getElementById('searchProjects').value.toLowerCase();
+            const statusFilter = document.getElementById('filterStatus').value;
+            
+            const projectCards = document.querySelectorAll('[data-project-id]');
+            
+            projectCards.forEach(card => {
+                const projectName = card.querySelector('h3').textContent.toLowerCase();
+                const projectDescription = card.querySelector('p').textContent.toLowerCase();
+                const projectStatus = card.querySelector('.status-planning, .status-in-progress, .status-on-hold, .status-completed, .status-cancelled')
+                    .className.split('status-')[1].split(' ')[0];
+                
+                const matchesSearch = projectName.includes(searchTerm) || projectDescription.includes(searchTerm);
+                const matchesStatus = statusFilter === '' || projectStatus === statusFilter;
+                
+                if (matchesSearch && matchesStatus) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+            
+            // Verificar se há projetos visíveis
+            const visibleProjects = document.querySelectorAll('[data-project-id]:not(.hidden)');
+            const projectsList = document.getElementById('projectsList');
+            
+            if (visibleProjects.length === 0) {
+                // Verificar se já existe a mensagem de "nenhum projeto encontrado"
+                if (!document.getElementById('noProjectsFound')) {
+                    const noProjectsMessage = document.createElement('div');
+                    noProjectsMessage.id = 'noProjectsFound';
+                    noProjectsMessage.className = 'col-span-full text-center py-8';
+                    noProjectsMessage.innerHTML = `
+                        <i class="ph ph-magnifying-glass text-4xl text-grayText mb-2"></i>
+                        <p class="text-grayText">Nenhum projeto encontrado com os filtros atuais.</p>
+                        <button id="clearFilters" class="mt-4 border border-darkBorder hover:border-primary text-white px-4 py-2 rounded-lg">
+                            Limpar Filtros
+                        </button>
+                    `;
+                    projectsList.appendChild(noProjectsMessage);
+                    
+                    document.getElementById('clearFilters').addEventListener('click', () => {
+                        document.getElementById('searchProjects').value = '';
+                        document.getElementById('filterStatus').value = '';
+                        filterProjects();
+                    });
+                }
+            } else {
+                // Remover mensagem de "nenhum projeto encontrado" se existir
+                const noProjectsMessage = document.getElementById('noProjectsFound');
+                if (noProjectsMessage) {
+                    noProjectsMessage.remove();
+                }
+            }
+        }
+        
+        // Ver detalhes do projeto
+        async function viewProjectDetails(projectId) {
+            try {
+                // Mostrar modal com loading
+                const modal = document.getElementById('projectDetailsModal');
+                modal.classList.remove('hidden');
+                
+                document.getElementById('projectDetailsContent').innerHTML = `
+                    <div class="animate-pulse">
+                        <div class="h-6 bg-darkBg rounded w-3/4 mb-4"></div>
+                        <div class="h-4 bg-darkBg rounded w-1/2 mb-2"></div>
+                        <div class="h-4 bg-darkBg rounded w-full mb-4"></div>
+                        <div class="h-32 bg-darkBg rounded w-full mb-4"></div>
+                    </div>
+                `;
+                
+                // Buscar detalhes do projeto
+                const response = await fetch(`/api/projects/${projectId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${auth.getToken()}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Falha ao carregar detalhes do projeto');
+                }
+                
+                const project = await response.json();
+                
+                // Buscar tarefas do projeto
+                const tasksResponse = await fetch(`/api/projects/${projectId}/tasks`, {
+                    headers: {
+                        'Authorization': `Bearer ${auth.getToken()}`
+                    }
+                });
+                
+                let tasks = [];
+                if (tasksResponse.ok) {
+                    tasks = await tasksResponse.json();
+                }
+                
+                // Atualizar título do modal
+                document.getElementById('detailsProjectName').textContent = project.name;
+                
+                // Mapear status para texto em português
+                const statusMap = {
+                    'planning': 'Planejamento',
+                    'in-progress': 'Em andamento',
+                    'on-hold': 'Em espera',
+                    'completed': 'Concluído',
+                    'cancelled': 'Cancelado'
+                };
+                
+                const statusText = statusMap[project.status] || project.status;
+                
+                // Formatar datas
+                const createdDate = new Date(project.createdAt);
+                const formattedCreatedDate = createdDate.toLocaleDateString('pt-BR');
+                
+                let updatedInfo = '';
+                if (project.updatedAt) {
+                    const updatedDate = new Date(project.updatedAt);
+                    const formattedUpdatedDate = updatedDate.toLocaleDateString('pt-BR');
+                    updatedInfo = `<p class="text-grayText mb-4">Última atualização: ${formattedUpdatedDate}</p>`;
+                }
+                
+                // Renderizar conteúdo do modal
+                document.getElementById('projectDetailsContent').innerHTML = `
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="status-${project.status} text-sm px-2 py-1 rounded-full border">
+                                ${statusText}
+                            </span>
+                            <span class="text-sm text-grayText">Criado em ${formattedCreatedDate}</span>
+                        </div>
+                        
+                        <p class="text-grayText mb-4">${project.description || 'Sem descrição'}</p>
+                        ${updatedInfo}
+                        
+                        <div class="flex space-x-2 mt-6">
+                            <button id="editProjectBtn" class="bg-darkBg hover:bg-darkBorder px-4 py-2 rounded-lg">
+                                <i class="ph ph-pencil mr-2"></i> Editar Projeto
+                            </button>
+                            <button id="deleteProjectBtn" class="bg-red-900/30 hover:bg-red-900/50 text-red-300 px-4 py-2 rounded-lg">
+                                <i class="ph ph-trash mr-2"></i> Excluir Projeto
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t border-darkBorder pt-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold">Tarefas do Projeto</h3>
+                            <button id="newTaskBtn" class="bg-primary hover:bg-purple-600 text-white px-3 py-1 rounded-lg text-sm">
+                                <i class="ph ph-plus mr-1"></i> Nova Tarefa
+                            </button>
+                        </div>
+                        
+                        <div id="projectTasks">
+                            ${renderProjectTasks(tasks)}
+                        </div>
+                    </div>
+                `;
+                
+                // Adicionar eventos aos botões
+                document.getElementById('editProjectBtn').addEventListener('click', () => {
+                    editProject(projectId);
+                });
+                
+                document.getElementById('deleteProjectBtn').addEventListener('click', () => {
+                    // Fechar modal de detalhes
+                    document.getElementById('projectDetailsModal').classList.add('hidden');
+                    // Chamar função de exclusão
+                    deleteProject(projectId);
+                });
+                
+                document.getElementById('newTaskBtn').addEventListener('click', () => {
+                    // Implementar criação de nova tarefa
+                    createNewTask(projectId);
+                });
+                
+            } catch (error) {
+                console.error('Erro ao carregar detalhes do projeto:', error);
+
+                document.getElementById('projectDetailsContent').innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="ph ph-warning text-4xl text-yellow-500 mb-2"></i>
+                        <p class="text-grayText">Erro ao carregar detalhes do projeto. Por favor, tente novamente.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Renderizar tarefas do projeto
+        function renderProjectTasks(tasks) {
+            if (!tasks || tasks.length === 0) {
+                return `
+                    <div class="text-center py-8 bg-darkBg/30 rounded-lg">
+                        <i class="ph ph-clipboard-text text-3xl text-grayText mb-2"></i>
+                        <p class="text-grayText">Nenhuma tarefa encontrada para este projeto.</p>
+                    </div>
+                `;
+            }
+            
+            // Agrupar tarefas por status
+            const tasksByStatus = {
+                'todo': [],
+                'in-progress': [],
+                'done': []
+            };
+            
+            tasks.forEach(task => {
+                if (tasksByStatus[task.status]) {
+                    tasksByStatus[task.status].push(task);
+                } else {
+                    tasksByStatus.todo.push(task);
+                }
+            });
+            
+            // Mapear status para texto em português
+            const statusLabels = {
+                'todo': 'A Fazer',
+                'in-progress': 'Em Andamento',
+                'done': 'Concluído'
+            };
+            
+            // Criar colunas de tarefas
+            return `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    ${Object.keys(tasksByStatus).map(status => `
+                        <div class="bg-darkBg/30 p-4 rounded-lg">
+                            <h4 class="font-medium mb-3">${statusLabels[status]} (${tasksByStatus[status].length})</h4>
+                            <div class="space-y-2">
+                                ${tasksByStatus[status].map(task => `
+                                    <div class="bg-darkPanel p-3 rounded border border-darkBorder hover:border-primary cursor-pointer task-item" data-task-id="${task.id}">
+                                        <h5 class="font-medium mb-1">${task.title}</h5>
+                                        <p class="text-sm text-grayText line-clamp-2">${task.description || 'Sem descrição'}</p>
+                                        ${task.dueDate ? `
+                                            <div class="flex items-center mt-2 text-xs text-grayText">
+                                                <i class="ph ph-clock mr-1"></i>
+                                                <span>Prazo: ${new Date(task.dueDate).toLocaleDateString('pt-BR')}</span>
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                `).join('') || `<p class="text-sm text-grayText text-center py-2">Nenhuma tarefa</p>`}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        
+        // Editar projeto
+        async function editProject(projectId) {
+            try {
+                // Fechar modal de detalhes se estiver aberto
+                document.getElementById('projectDetailsModal').classList.add('hidden');
+                
+                // Buscar dados do projeto
+                const response = await fetch(`/api/projects/${projectId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${auth.getToken()}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Falha ao carregar dados do projeto');
+                }
+                
+                const project = await response.json();
+                
+                // Criar modal de edição
+                const editModal = document.createElement('div');
+                editModal.id = 'editProjectModal';
+                editModal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+                editModal.innerHTML = `
+                    <div class="bg-darkPanel border border-darkBorder rounded-lg p-6 w-full max-w-md">
+                        <div class="flex justify-between items-center mb-4">
+                            <h2 class="text-xl font-semibold">Editar Projeto</h2>
+                            <button id="closeEditProjectModal" class="text-grayText hover:text-white">
+                                <i class="ph ph-x text-xl"></i>
+                            </button>
+                        </div>
+                        <form id="editProjectForm">
+                            <div class="mb-4">
+                                <label for="editProjectName" class="block text-grayText mb-1">Nome do Projeto</label>
+                                <input type="text" id="editProjectName" name="name" value="${project.name}" required
+                                    class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary">
+                            </div>
+                            <div class="mb-4">
+                                <label for="editProjectDescription" class="block text-grayText mb-1">Descrição</label>
+                                <textarea id="editProjectDescription" name="description" rows="3"
+                                    class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary">${project.description || ''}</textarea>
+                            </div>
+                            <div class="mb-4">
+                                <label for="editProjectStatus" class="block text-grayText mb-1">Status</label>
+                                <select id="editProjectStatus" name="status"
+                                    class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary">
+                                    <option value="planning" ${project.status === 'planning' ? 'selected' : ''}>Planejamento</option>
+                                    <option value="in-progress" ${project.status === 'in-progress' ? 'selected' : ''}>Em andamento</option>
+                                    <option value="on-hold" ${project.status === 'on-hold' ? 'selected' : ''}>Em espera</option>
+                                    <option value="completed" ${project.status === 'completed' ? 'selected' : ''}>Concluído</option>
+                                    <option value="cancelled" ${project.status === 'cancelled' ? 'selected' : ''}>Cancelado</option>
+                                </select>
+                            </div>
+                            <div class="flex justify-end space-x-2">
+                                <button type="button" id="cancelEditProject"
+                                    class="px-4 py-2 border border-darkBorder rounded-lg hover:bg-darkBorder">
+                                    Cancelar
+                                </button>
+                                <button type="submit"
+                                    class="bg-primary hover:bg-purple-600 text-white px-4 py-2 rounded-lg">
+                                    Salvar Alterações
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+                
+                // Adicionar modal ao DOM
+                document.body.appendChild(editModal);
+                
+                // Configurar eventos
+                document.getElementById('closeEditProjectModal').addEventListener('click', () => {
+                    document.getElementById('editProjectModal').remove();
+                });
+                
+                document.getElementById('cancelEditProject').addEventListener('click', () => {
+                    document.getElementById('editProjectModal').remove();
+                });
+                
+                document.getElementById('editProjectForm').addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const formData = {
+                        name: document.getElementById('editProjectName').value,
+                        description: document.getElementById('editProjectDescription').value,
+                        status: document.getElementById('editProjectStatus').value
+                    };
+                    
+                    try {
+                        const response = await fetch(`/api/projects/${projectId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${auth.getToken()}`
+                            },
+                            body: JSON.stringify(formData)
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error('Falha ao atualizar projeto');
+                        }
+                        
+                        // Remover modal
+                        document.getElementById('editProjectModal').remove();
+                        
+                        // Recarregar projetos
+                        await loadProjects();
+                        
+                    } catch (error) {
+                        console.error('Erro ao atualizar projeto:', error);
+                        alert('Erro ao atualizar projeto. Por favor, tente novamente.');
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Erro ao editar projeto:', error);
+                alert('Erro ao carregar dados do projeto. Por favor, tente novamente.');
+            }
+        }
+        
+        // Excluir projeto
+        async function deleteProject(projectId) {
+            // Confirmar exclusão
+            const confirmDelete = confirm('Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita.');
+            
+            if (!confirmDelete) return;
+            
+            try {
+                const response = await fetch(`/api/projects/${projectId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${auth.getToken()}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Falha ao excluir projeto');
+                }
+                
+                // Recarregar projetos
+                await loadProjects();
+                
+            } catch (error) {
+                console.error('Erro ao excluir projeto:', error);
+                alert('Erro ao excluir projeto. Por favor, tente novamente.');
+            }
+        }
+        
+        // Criar nova tarefa
+        function createNewTask(projectId) {
+            // Criar modal de nova tarefa
+            const newTaskModal = document.createElement('div');
+            newTaskModal.id = 'newTaskModal';
+            newTaskModal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+            newTaskModal.innerHTML = `
+                <div class="bg-darkPanel border border-darkBorder rounded-lg p-6 w-full max-w-md">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold">Nova Tarefa</h2>
+                        <button id="closeNewTaskModal" class="text-grayText hover:text-white">
+                            <i class="ph ph-x text-xl"></i>
+                        </button>
+                    </div>
+                    <form id="newTaskForm">
+                        <div class="mb-4">
+                            <label for="taskTitle" class="block text-grayText mb-1">Título</label>
+                            <input type="text" id="taskTitle" name="title" required
+                                class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary">
+                        </div>
+                        <div class="mb-4">
+                            <label for="taskDescription" class="block text-grayText mb-1">Descrição</label>
+                            <textarea id="taskDescription" name="description" rows="3"
+                                class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary"></textarea>
+                        </div>
+                        <div class="mb-4">
+                            <label for="taskPriority" class="block text-grayText mb-1">Prioridade</label>
+                            <select id="taskPriority" name="priority"
+                                class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary">
+                                <option value="low">Baixa</option>
+                                <option value="medium" selected>Média</option>
+                                <option value="high">Alta</option>
+                                <option value="urgent">Urgente</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label for="taskDueDate" class="block text-grayText mb-1">Data de Entrega</label>
+                            <input type="date" id="taskDueDate" name="dueDate"
+                                class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary">
+                        </div>
+                        <div class="flex justify-end space-x-2">
+                            <button type="button" id="cancelNewTask"
+                                class="px-4 py-2 border border-darkBorder rounded-lg hover:bg-darkBorder">
+                                Cancelar
+                            </button>
+                            <button type="submit"
+                                class="bg-primary hover:bg-purple-600 text-white px-4 py-2 rounded-lg">
+                                Criar Tarefa
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            
+            // Adicionar modal ao DOM
+            document.body.appendChild(newTaskModal);
+            
+            // Configurar eventos
+            document.getElementById('closeNewTaskModal').addEventListener('click', () => {
+                document.getElementById('newTaskModal').remove();
+            });
+            
+            document.getElementById('cancelNewTask').addEventListener('click', () => {
+                document.getElementById('newTaskModal').remove();
+            });
+            
+            document.getElementById('newTaskForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = {
+                    title: document.getElementById('taskTitle').value,
+                    description: document.getElementById('taskDescription').value,
+                    priority: document.getElementById('taskPriority').value,
+                    dueDate: document.getElementById('taskDueDate').value,
+                    projectId: projectId,
+                    status: 'todo'
+                };
+                
+                try {
+                    const response = await fetch('/api/tasks', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${auth.getToken()}`
+                        },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Falha ao criar tarefa');
+                    }
+                    
+                    // Remover modal
+                    document.getElementById('newTaskModal').remove();
+                    
+                    // Atualizar detalhes do projeto para mostrar a nova tarefa
+                    viewProjectDetails(projectId);
+                    
+                } catch (error) {
+                    console.error('Erro ao criar tarefa:', error);
+                    alert('Erro ao criar tarefa. Por favor, tente novamente.');
+                }
+            });
+        }
+        
+        // Função para simular API para desenvolvimento
+        // Esta função será substituída pela API real quando estiver pronta
+        async function mockApi() {
+            // Simular resposta da API
+            if (!window.fetch.isMocked) {
+                const originalFetch = window.fetch;
+                
+                window.fetch = function(url, options = {}) {
+                    console.log(`Mock API Request: ${options?.method || 'GET'} ${url}`);
+                    
+                    // Extrair ID do projeto da URL
+                    const projectIdMatch = url.match(/\/api\/projects\/([^\/]+)(?:\/tasks)?$/);
+                    const projectId = projectIdMatch ? projectIdMatch[1] : null;
+                    
+                    // Extrair ID da tarefa da URL
+                    const taskIdMatch = url.match(/\/api\/tasks\/([^\/]+)$/);
+                    const taskId = taskIdMatch ? taskIdMatch[1] : null;
+                    
+                    // Obter projetos do localStorage
+                    let mockProjects = JSON.parse(localStorage.getItem('mockProjects') || '[]');
+                    let mockTasks = JSON.parse(localStorage.getItem('mockTasks') || '[]');
+                    
+                    // Listar projetos
+                    if (url === '/api/projects' && (!options.method || options.method === 'GET')) {
+                        return Promise.resolve({
+                            ok: true,
+                            json: () => Promise.resolve(mockProjects)
+                        });
+                    }
+                    
+                    // Criar projeto
+                    if (url === '/api/projects' && options.method === 'POST') {
+                        const newProject = JSON.parse(options.body);
+                        newProject.id = Date.now().toString();
+                        newProject.createdAt = new Date().toISOString();
+                        
+                        mockProjects.push(newProject);
+                        localStorage.setItem('mockProjects', JSON.stringify(mockProjects));
+                        
+                        return Promise.resolve({
+                            ok: true,
+                            json: () => Promise.resolve(newProject)
+                        });
+                    }
+                    
+                    // Obter projeto específico
+                    if (projectId && !url.includes('/tasks') && (!options.method || options.method === 'GET')) {
+                        const project = mockProjects.find(p => p.id === projectId);
+                        
+                        if (project) {
+                            return Promise.resolve({
+                                ok: true,
+                                json: () => Promise.resolve(project)
+                            });
+                        } else {
+                            return Promise.resolve({
+                                ok: false,
+                                status: 404,
+                                json: () => Promise.resolve({ error: 'Projeto não encontrado' })
+                            });
+                        }
+                    }
+                    
+                    // Atualizar projeto
+                    if (projectId && options.method === 'PUT') {
+                        const projectIndex = mockProjects.findIndex(p => p.id === projectId);
+                        
+                        if (projectIndex !== -1) {
+                            const updatedProject = JSON.parse(options.body);
+                            mockProjects[projectIndex] = {
+                                ...mockProjects[projectIndex],
+                                ...updatedProject,
+                                updatedAt: new Date().toISOString()
+                            };
+                            
+                            localStorage.setItem('mockProjects', JSON.stringify(mockProjects));
+                            
+                            return Promise.resolve({
+                                ok: true,
+                                json: () => Promise.resolve(mockProjects[projectIndex])
+                            });
+                        } else {
+                            return Promise.resolve({
+                                ok: false,
+                                status: 404,
+                                json: () => Promise.resolve({ error: 'Projeto não encontrado' })
+                            });
+                        }
+                    }
+                    
+                    // Excluir projeto
+                    if (projectId && options.method === 'DELETE') {
+                        const projectIndex = mockProjects.findIndex(p => p.id === projectId);
+                        
+                        if (projectIndex !== -1) {
+                            mockProjects.splice(projectIndex, 1);
+                            localStorage.setItem('mockProjects', JSON.stringify(mockProjects));
+                            
+                            // Também excluir tarefas associadas
+                            mockTasks = mockTasks.filter(t => t.projectId !== projectId);
+                            localStorage.setItem('mockTasks', JSON.stringify(mockTasks));
+                            
+                            return Promise.resolve({
+                                ok: true,
+                                json: () => Promise.resolve({ success: true })
+                            });
+                        } else {
+                            return Promise.resolve({
+                                ok: false,
+                                status: 404,
+                                json: () => Promise.resolve({ error: 'Projeto não encontrado' })
+                            });
+                        }
+                    }
+                    
+                    // Listar tarefas de um projeto
+                    if (projectId && url.includes('/tasks') && (!options.method || options.method === 'GET')) {
+                        const projectTasks = mockTasks.filter(t => t.projectId === projectId);
+                        
+                        return Promise.resolve({
+                            ok: true,
+                            json: () => Promise.resolve(projectTasks)
+                        });
+                    }
+                    
+                    // Criar tarefa
+                    if (url === '/api/tasks' && options.method === 'POST') {
+                        const newTask = JSON.parse(options.body);
+                        newTask.id = Date.now().toString();
+                        newTask.createdAt = new Date().toISOString();
+                        
+                        mockTasks.push(newTask);
+                        localStorage.setItem('mockTasks', JSON.stringify(mockTasks));
+                        
+                        return Promise.resolve({
+                            ok: true,
+                            json: () => Promise.resolve(newTask)
+                        });
+                    }
+                    
+                    // Atualizar tarefa
+                    if (taskId && options.method === 'PUT') {
+                        const taskIndex = mockTasks.findIndex(t => t.id === taskId);
+                        
+                        if (taskIndex !== -1) {
+                            const updatedTask = JSON.parse(options.body);
+                            mockTasks[taskIndex] = {
+                                ...mockTasks[taskIndex],
+                                ...updatedTask,
+                                updatedAt: new Date().toISOString()
+                            };
+                            
+                            localStorage.setItem('mockTasks', JSON.stringify(mockTasks));
+                            
+                            return Promise.resolve({
+                                ok: true,
+                                json: () => Promise.resolve(mockTasks[taskIndex])
+                            });
+                        } else {
+                            return Promise.resolve({
+                                ok: false,
+                                status: 404,
+                                json: () => Promise.resolve({ error: 'Tarefa não encontrada' })
+                            });
+                        }
+                    }
+                    
+                    // Excluir tarefa
+                    if (taskId && options.method === 'DELETE') {
+                        const taskIndex = mockTasks.findIndex(t => t.id === taskId);
+                        
+                        if (taskIndex !== -1) {
+                            mockTasks.splice(taskIndex, 1);
+                            localStorage.setItem('mockTasks', JSON.stringify(mockTasks));
+                            
+                            return Promise.resolve({
+                                ok: true,
+                                json: () => Promise.resolve({ success: true })
+                            });
+                        } else {
+                            return Promise.resolve({
+                                ok: false,
+                                status: 404,
+                                json: () => Promise.resolve({ error: 'Tarefa não encontrada' })
+                            });
+                        }
+                    }
+                    
+                    // Se não for uma rota mockada, passar para o fetch original
+                    return originalFetch(url, options);
+                };
+                
+                window.fetch.isMocked = true;
+            }
+        }
+        
+        // Inicializar mock API para desenvolvimento
+        mockApi();
+    </script>
+</body>
+</html>

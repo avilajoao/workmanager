@@ -94,7 +94,7 @@
                             <i class="ph ph-caret-down text-grayText"></i>
                         </button>
                         <!-- Dropdown menu -->
-                        <div class="absolute right-0 mt-2 w-48 bg-darkPanel border border-darkBorder rounded-lg shadow-lg hidden" id="userDropdown">
+                        <div class="absolute right-0 mt-2 w-48 bg-darkPanel border border-darkBorder rounded-lg shadow-lg hidden dropdown-menu" id="userDropdown">
                             <ul class="py-2">
                                 <li><a href="profile.html" class="block px-4 py-2 hover:bg-darkBorder">Meu Perfil</a></li>
                                 <li><a href="settings.html" class="block px-4 py-2 hover:bg-darkBorder">Configurações</a></li>
@@ -163,8 +163,11 @@
     </div>
 
     <!-- Scripts -->
+    <script src="init-data.js"></script>
     <script src="api-mock.js"></script>
     <script src="auth.js"></script>
+    <script src="theme.js"></script>
+    <script src="sidebar.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             // Verificar autenticação
@@ -191,140 +194,64 @@
             // Atualizar data
             updateCurrentDate();
             
-            // Carregar tema salvo
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            applyTheme(savedTheme);
+            // Configurar eventos
+            setupEventListeners();
             
             // Carregar dados
             await loadData();
-            
-            // Configurar eventos
-            setupEventListeners();
         });
         
         // Atualizar data atual
         function updateCurrentDate() {
             const dateElement = document.getElementById('current-date');
-            const agendaDate = document.getElementById('agenda-date');
+            if (!dateElement) return;
             
             const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             const currentDate = new Date().toLocaleDateString('pt-BR', options);
             
             dateElement.textContent = currentDate;
-            agendaDate.textContent = currentDate;
+            
+            const agendaDate = document.getElementById('agenda-date');
+            if (agendaDate) {
+                agendaDate.textContent = currentDate;
+            }
+        }
+        
+        // Configurar eventos
+        function setupEventListeners() {
+            // Toggle user dropdown
+            const userProfile = document.getElementById('userProfile');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            if (userProfile && userDropdown) {
+                userProfile.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    userDropdown.classList.toggle('hidden');
+                });
+                
+                // Fechar dropdown ao clicar fora
+                document.addEventListener('click', () => {
+                    userDropdown.classList.add('hidden');
+                });
+            }
+            
+            // Logout do dropdown
+            const logoutBtnDropdown = document.getElementById('logoutBtnDropdown');
+            if (logoutBtnDropdown) {
+                logoutBtnDropdown.addEventListener('click', () => {
+                    auth.logout();
+                });
+            }
         }
         
         // Carregar dados
         async function loadData() {
             try {
-                // Carregar tarefas
-                const tasksResponse = await fetchWithAuth('/api/tasks');
-                if (tasksResponse.ok) {
-                    const tasks = await tasksResponse.json();
-                    renderTasks(tasks);
-                }
-                
-                // Carregar projetos
-                const projectsResponse = await fetchWithAuth('/api/projects');
-                if (projectsResponse.ok) {
-                    const projects = await projectsResponse.json();
-                    renderProjects(projects);
-                }
-                
+                // Implementar carregamento de dados específicos da página
+                console.log('Carregando dados...');
             } catch (error) {
                 console.error('Erro ao carregar dados:', error);
             }
-        }
-        
-        // Renderizar tarefas
-        function renderTasks(tasks) {
-            const taskList = document.getElementById('task-list');
-            taskList.innerHTML = '';
-            
-            // Filtrar tarefas pendentes e ordenar por prioridade
-            const pendingTasks = tasks
-                .filter(task => task.status !== 'done')
-                .sort((a, b) => {
-                    const priorityOrder = { urgent: 0, high: 1, medium: 2, low: 3 };
-                    return priorityOrder[a.priority] - priorityOrder[b.priority];
-                })
-                .slice(0, 5); // Mostrar apenas 5 tarefas
-            
-            if (pendingTasks.length === 0) {
-                taskList.innerHTML = '<p class="text-grayText">Nenhuma tarefa pendente.</p>';
-                return;
-            }
-            
-            pendingTasks.forEach(task => {
-                const taskElement = document.createElement('li');
-                taskElement.className = 'flex items-center';
-                
-                // Determinar cor da prioridade
-                let priorityColor = 'bg-gray-500';
-                
-                switch (task.priority) {
-                    case 'low':
-                        priorityColor = 'bg-blue-500';
-                        break;
-                    case 'medium':
-                        priorityColor = 'bg-yellow-500';
-                        break;
-                    case 'high':
-                        priorityColor = 'bg-orange-500';
-                        break;
-                    case 'urgent':
-                        priorityColor = 'bg-red-500';
-                        break;
-                }
-                
-                taskElement.innerHTML = `
-                    <span class="w-2 h-2 rounded-full ${priorityColor} mr-3"></span>
-                    <span class="flex-1">${task.title}</span>
-                `;
-                
-                taskList.appendChild(taskElement);
-            });
-        }
-        
-        // Renderizar projetos
-        function renderProjects(projects) {
-            const projectsContainer = document.getElementById('recent-projects');
-            projectsContainer.innerHTML = '';
-            
-            // Ordenar projetos por data de criação (mais recentes primeiro)
-            const recentProjects = projects
-                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                .slice(0, 3); // Mostrar apenas 3 projetos
-            
-            if (recentProjects.length === 0) {
-                projectsContainer.innerHTML = '<p class="text-grayText col-span-3 text-center">Nenhum projeto encontrado.</p>';
-                return;
-            }
-            
-            // Mapear status para texto e cor
-            const statusMap = {
-                'planning': { text: 'Planejamento', color: 'bg-blue-500' },
-                'in-progress': { text: 'Em Andamento', color: 'bg-yellow-500' },
-                'completed': { text: 'Concluído', color: 'bg-green-500' },
-                'on-hold': { text: 'Em Espera', color: 'bg-red-500' }
-            };
-            
-            recentProjects.forEach(project => {
-                const status = statusMap[project.status] || { text: 'Desconhecido', color: 'bg-gray-500' };
-                
-                const projectCard = document.createElement('div');
-                projectCard.className = 'bg-darkPanel border border-darkBorder rounded-lg p-4 hover:border-primary transition-colors';
-                projectCard.innerHTML = `
-                    <div class="flex justify-between items-start mb-2">
-                        <h3 class="font-medium">${project.name}</h3>
-                        <span class="px-2 py-1 text-xs rounded ${status.color} text-white">${status.text}</span>
-                    </div>
-                    <p class="text-grayText text-sm mb-3">${project.description || 'Sem descrição'}</p>
-                    <a href="projects.html?id=${project.id}" class="text-primary hover:underline text-sm">Ver detalhes →</a>
-                `;
-                
-                projectsContainer.appendChild(projectCard);
-            });
         }
     </script>
 
