@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Backlog - WorkManager</title>
+    <title>Backlog - Construtora</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -25,6 +24,7 @@
             }
         };
     </script>
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css" />
     <style>
         .sidebar {
             width: 5rem;
@@ -33,52 +33,52 @@
         .sidebar.expanded {
             width: 15rem;
         }
-        .panel {
-            background-color: #1E1E1E;
-            border-color: #292929;
-        }
-        .priority-urgent {
-            background-color: rgba(239, 68, 68, 0.2);
-            color: rgb(252, 165, 165);
-            border-color: rgb(239, 68, 68);
-        }
-        .priority-high {
-            background-color: rgba(249, 115, 22, 0.2);
-            color: rgb(253, 186, 116);
-            border-color: rgb(249, 115, 22);
-        }
-        .priority-medium {
-            background-color: rgba(234, 179, 8, 0.2);
-            color: rgb(253, 224, 71);
-            border-color: rgb(234, 179, 8);
-        }
-        .priority-low {
-            background-color: rgba(34, 197, 94, 0.2);
-            color: rgb(134, 239, 172);
-            border-color: rgb(34, 197, 94);
-        }
         .kanban-column {
-            background-color: rgba(18, 18, 18, 0.3);
-            padding: 1rem;
-            border-radius: 0.5rem;
-            min-height: 500px;
-            display: flex;
-            flex-direction: column;
+            min-height: 300px;
         }
         .task-card {
-            background-color: #1E1E1E;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            border: 1px solid #292929;
-            margin-bottom: 0.75rem;
             cursor: pointer;
-            transition-property: color, background-color, border-color;
-            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-            transition-duration: 150ms;
+            transition: all 0.2s ease;
         }
         .task-card:hover {
-            border-color: #8B5CF6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
+        .priority-urgent { 
+            background-color: rgba(239, 68, 68, 0.2); 
+            color: #ef4444;
+            border-color: #ef4444;
+        }
+        .priority-high { 
+            background-color: rgba(249, 115, 22, 0.2); 
+            color: #f97316;
+            border-color: #f97316;
+        }
+        .priority-medium { 
+            background-color: rgba(234, 179, 8, 0.2); 
+            color: #eab308;
+            border-color: #eab308;
+        }
+        .priority-low { 
+            background-color: rgba(34, 197, 94, 0.2); 
+            color: #22c55e;
+            border-color: #22c55e;
+        }
+         .task-card {
+        cursor: grab;
+        transition: all 0.2s ease;
+    }
+    .task-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .task-card:active {
+        cursor: grabbing;
+    }
+    .kanban-column {
+        min-height: 300px;
+        transition: background-color 0.2s ease;
+    }
     </style>
 </head>
 <body class="bg-darkBg text-white font-sans transition-all duration-300">
@@ -89,232 +89,221 @@
         <!-- Sidebar -->
         <aside class="sidebar bg-darkPanel flex flex-col items-center py-6 border-r border-darkBorder">
             <button id="toggleSidebar" class="text-grayText text-2xl mb-6">
-                <i class="ph ph-list"></i>
+                <i class="ph-fill ph-list"></i>
             </button>
             <nav class="flex flex-col space-y-6">
                 <a href="home.html" class="text-grayText hover:text-white text-2xl">
-                    <i class="ph ph-house"></i>
-                    <span class="hidden ml-3 text-base">Início</span>
+                    <i class="ph-fill ph-house"></i>
                 </a>
                 <a href="backlog.html" class="text-primary hover:text-white text-2xl">
-                    <i class="ph ph-kanban"></i>
-                    <span class="hidden ml-3 text-base">Backlog</span>
+                    <i class="ph-fill ph-kanban"></i>
                 </a>
-                <a href="projects.html" class="text-grayText hover:text-white text-2xl">
-                    <i class="ph ph-buildings"></i>
-                    <span class="hidden ml-3 text-base">Projetos</span>
+                <a href="#" class="text-grayText hover:text-white text-2xl">
+                    <i class="ph-fill ph-chart-line"></i>
                 </a>
-                <a href="settings.html" class="text-grayText hover:text-white text-2xl">
-                    <i class="ph ph-gear"></i>
-                    <span class="hidden ml-3 text-base">Configurações</span>
+                <a href="#" class="text-grayText hover:text-white text-2xl">
+                    <i class="ph-fill ph-gear"></i>
                 </a>
             </nav>
-            <div class="mt-auto">
-                <button id="logoutBtn" class="text-grayText hover:text-white text-2xl">
-                    <i class="ph ph-sign-out"></i>
-                    <span class="hidden ml-3 text-base">Sair</span>
-                </button>
-            </div>
         </aside>
 
         <!-- Conteúdo Principal -->
-        <main class="flex-1 p-8 overflow-y-auto">
+        <main class="flex-1 p-8 overflow-auto">
 
             <!-- Header -->
             <header class="flex justify-between items-center mb-6">
                 <div>
                     <h1 class="text-3xl font-semibold">Backlog</h1>
-                    <p class="text-grayText" id="current-date"></p>
+                    <p id="current-date" class="text-grayText"></p>
                 </div>
                 <div class="flex items-center space-x-4">
                     <button id="toggleDarkMode" class="bg-transparent text-2xl">
-                        <i class="ph ph-moon"></i>
+                        <i class="ph-fill ph-moon"></i>
                     </button>
                     <div class="relative" id="userProfile">
-                        <button class="flex items-center space-x-2 bg-darkPanel px-3 py-2 rounded-lg border border-darkBorder">
-                            <span id="userInitials" class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center font-medium"></span>
-                            <span id="userName">Carregando...</span>
-                            <i class="ph ph-caret-down text-grayText"></i>
-                        </button>
-                        <!-- Dropdown menu -->
-                        <div class="absolute right-0 mt-2 w-48 bg-darkPanel border border-darkBorder rounded-lg shadow-lg hidden dropdown-menu" id="userDropdown">
-                            <ul class="py-2">
-                                <li><a href="profile.html" class="block px-4 py-2 hover:bg-darkBorder">Meu Perfil</a></li>
-                                <li><a href="settings.html" class="block px-4 py-2 hover:bg-darkBorder">Configurações</a></li>
-                                <li><hr class="my-1 border-darkBorder"></li>
-                                <li><button id="logoutBtnDropdown" class="block w-full text-left px-4 py-2 hover:bg-darkBorder text-red-400">Sair</button></li>
-                            </ul>
+                        <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center cursor-pointer">
+                            <span id="userInitials">JS</span>
+                        </div>
+                        <div id="userDropdown" class="absolute right-0 mt-2 w-48 bg-darkPanel border border-darkBorder rounded-lg shadow-lg z-10 hidden">
+                            <div class="p-4 border-b border-darkBorder">
+                                <p id="userName" class="font-medium">João Silva</p>
+                                <p class="text-grayText text-sm">Admin</p>
+                            </div>
+                            <div class="p-2">
+                                <button id="logoutBtnDropdown" class="w-full text-left px-4 py-2 text-grayText hover:bg-darkBg rounded">
+                                    <i class="ph-fill ph-sign-out mr-2"></i> Sair
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </header>
 
-            <!-- Barra de ferramentas -->
-            <div class="flex justify-between items-center mb-6">
-                <div class="flex space-x-2">
+            <!-- Filtros e Ações -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <div class="flex flex-col md:flex-row gap-4 w-full md:w-auto">
                     <div class="relative">
+                        <i class="ph-fill ph-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-grayText"></i>
                         <input type="text" id="searchTasks" placeholder="Buscar tarefas..." 
-                            class="bg-darkPanel border border-darkBorder rounded-lg px-4 py-2 pl-10 focus:outline-none focus:border-primary">
-                        <i class="ph ph-magnifying-glass absolute left-3 top-2.5 text-grayText"></i>
+                            class="pl-10 pr-4 py-2 bg-darkBg border border-darkBorder rounded-lg focus:outline-none focus:border-primary w-full md:w-64">
                     </div>
-                    <select id="filterProject" class="bg-darkPanel border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary">
-                        <option value="">Todos os projetos</option>
-                        <!-- Opções serão preenchidas via JavaScript -->
-                    </select>
-                    <select id="filterPriority" class="bg-darkPanel border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary">
-                        <option value="">Todas as prioridades</option>
-                        <option value="urgent">Urgente</option>
-                        <option value="high">Alta</option>
-                        <option value="medium">Média</option>
-                        <option value="low">Baixa</option>
-                    </select>
+                    <div class="flex gap-2">
+                        <select id="filterProject" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary">
+                            <option value="">Todos os Projetos</option>
+                        </select>
+                        <select id="filterPriority" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary">
+                            <option value="">Todas as Prioridades</option>
+                            <option value="urgent">Urgente</option>
+                            <option value="high">Alta</option>
+                            <option value="medium">Média</option>
+                            <option value="low">Baixa</option>
+                        </select>
+                    </div>
                 </div>
                 <button id="newTaskBtn" class="bg-primary hover:bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center">
-                    <i class="ph ph-plus mr-2"></i> Nova Tarefa
+                    <i class="ph-fill ph-plus mr-2"></i> Nova Tarefa
                 </button>
             </div>
 
             <!-- Kanban Board -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
                 <!-- Coluna: A Fazer -->
-                <div class="kanban-column" id="todo-column">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="font-semibold text-lg">A Fazer</h2>
-                        <span class="bg-darkPanel px-2 py-1 rounded-full text-xs" id="todo-count">0</span>
+                <div id="todo-column" class="panel bg-darkPanel border border-darkBorder rounded-lg">
+                    <div class="p-4 border-b border-darkBorder flex justify-between items-center">
+                        <h2 class="font-semibold flex items-center">
+                            <i class="ph-fill ph-circle-dashed mr-2 text-grayText"></i>
+                            A Fazer
+                            <span id="todo-count" class="ml-2 text-xs bg-darkBg px-2 py-1 rounded-full">0</span>
+                        </h2>
                     </div>
-                    <div class="task-list flex-1" id="todo-tasks">
-                        <div class="animate-pulse">
-                            <div class="bg-darkPanel border border-darkBorder rounded-lg p-4 mb-3 h-24"></div>
-                            <div class="bg-darkPanel border border-darkBorder rounded-lg p-4 mb-3 h-24"></div>
+                    <div id="todo-tasks" class="kanban-column p-4 space-y-3">
+                        <div class="text-center py-8 text-grayText">
+                            <p>Carregando tarefas...</p>
                         </div>
                     </div>
                 </div>
-
+                
                 <!-- Coluna: Em Andamento -->
-                <div class="kanban-column" id="in-progress-column">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="font-semibold text-lg">Em Andamento</h2>
-                        <span class="bg-darkPanel px-2 py-1 rounded-full text-xs" id="in-progress-count">0</span>
+                <div id="in-progress-column" class="panel bg-darkPanel border border-darkBorder rounded-lg">
+                    <div class="p-4 border-b border-darkBorder flex justify-between items-center">
+                        <h2 class="font-semibold flex items-center">
+                            <i class="ph-fill ph-circle-half mr-2 text-yellow-300"></i>
+                            Em Andamento
+                            <span id="in-progress-count" class="ml-2 text-xs bg-darkBg px-2 py-1 rounded-full">0</span>
+                        </h2>
                     </div>
-                    <div class="task-list flex-1" id="in-progress-tasks">
-                        <div class="animate-pulse">
-                            <div class="bg-darkPanel border border-darkBorder rounded-lg p-4 mb-3 h-24"></div>
+                    <div id="in-progress-tasks" class="kanban-column p-4 space-y-3">
+                        <div class="text-center py-8 text-grayText">
+                            <p>Carregando tarefas...</p>
                         </div>
                     </div>
                 </div>
-
+                
                 <!-- Coluna: Concluído -->
-                <div class="kanban-column" id="done-column">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="font-semibold text-lg">Concluído</h2>
-                        <span class="bg-darkPanel px-2 py-1 rounded-full text-xs" id="done-count">0</span>
+                <div id="done-column" class="panel bg-darkPanel border border-darkBorder rounded-lg">
+                    <div class="p-4 border-b border-darkBorder flex justify-between items-center">
+                        <h2 class="font-semibold flex items-center">
+                            <i class="ph-fill ph-check-circle mr-2 text-green-400"></i>
+                            Concluído
+                            <span id="done-count" class="ml-2 text-xs bg-darkBg px-2 py-1 rounded-full">0</span>
+                        </h2>
                     </div>
-                    <div class="task-list flex-1" id="done-tasks">
-                        <div class="animate-pulse">
-                            <div class="bg-darkPanel border border-darkBorder rounded-lg p-4 mb-3 h-24"></div>
+                    <div id="done-tasks" class="kanban-column p-4 space-y-3">
+                        <div class="text-center py-8 text-grayText">
+                            <p>Carregando tarefas...</p>
                         </div>
                     </div>
                 </div>
+                
             </div>
 
-            <!-- Modal de Nova Tarefa -->
-            <div id="taskModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-                <div class="bg-darkPanel border border-darkBorder rounded-lg p-6 w-full max-w-md">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-semibold" id="taskModalTitle">Nova Tarefa</h2>
-                        <button id="closeTaskModal" class="text-grayText hover:text-white">
-                            <i class="ph ph-x text-xl"></i>
-                        </button>
-                    </div>
-                    <form id="taskForm">
-                        <input type="hidden" id="taskId">
-                        <div class="mb-4">
-                            <label for="taskTitle" class="block text-grayText mb-1">Título</label>
-                            <input type="text" id="taskTitle" name="title" required
-                                class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary">
-                        </div>
-                        <div class="mb-4">
-                            <label for="taskDescription" class="block text-grayText mb-1">Descrição</label>
-                            <textarea id="taskDescription" name="description" rows="3"
-                                class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary"></textarea>
-                        </div>
-                        <div class="mb-4">
-                            <label for="taskProject" class="block text-grayText mb-1">Projeto</label>
-                            <select id="taskProject" name="projectId" required
-                                class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary">
-                                <option value="">Selecione um projeto</option>
-                                <!-- Opções serão preenchidas via JavaScript -->
-                            </select>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label for="taskPriority" class="block text-grayText mb-1">Prioridade</label>
-                                <select id="taskPriority" name="priority"
-                                    class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary">
-                                    <option value="low">Baixa</option>
-                                    <option value="medium" selected>Média</option>
-                                    <option value="high">Alta</option>
-                                    <option value="urgent">Urgente</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="taskStatus" class="block text-grayText mb-1">Status</label>
-                                <select id="taskStatus" name="status"
-                                    class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary">
-                                    <option value="todo">A Fazer</option>
-                                    <option value="in-progress">Em Andamento</option>
-                                    <option value="done">Concluído</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="mb-4">
-                            <label for="taskDueDate" class="block text-grayText mb-1">Data de Entrega</label>
-                            <input type="date" id="taskDueDate" name="dueDate"
-                                class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary">
-                        </div>
-                        <div class="flex justify-end space-x-2">
-                            <button type="button" id="cancelTask"
-                                class="px-4 py-2 border border-darkBorder rounded-lg hover:bg-darkBorder">
-                                Cancelar
-                            </button>
-                            <button type="submit" id="saveTaskBtn"
-                                class="bg-primary hover:bg-purple-600 text-white px-4 py-2 rounded-lg">
-                                Salvar
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Modal de Detalhes da Tarefa -->
-            <div id="taskDetailsModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
-                <div class="bg-darkPanel border border-darkBorder rounded-lg p-6 w-full max-w-lg">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-xl font-semibold" id="detailsTaskTitle">Detalhes da Tarefa</h2>
-                        <button id="closeTaskDetailsModal" class="text-grayText hover:text-white">
-                            <i class="ph ph-x text-xl"></i>
-                        </button>
-                    </div>
-
-
-
-
-
-
-
-
-                    <div id="taskDetailsContent">
-                        <div class="animate-pulse">
-                            <div class="h-6 bg-darkBg rounded w-3/4 mb-4"></div>
-                            <div class="h-4 bg-darkBg rounded w-1/2 mb-2"></div>
-                            <div class="h-4 bg-darkBg rounded w-full mb-4"></div>
-                            <div class="h-32 bg-darkBg rounded w-full mb-4"></div>
-                        </div>
-                    </div>
-                </div>
-           </div>
         </main>
     </div>
+<!-- Modal de Tarefa -->
+<div id="taskModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+    <div class="bg-darkPanel border border-darkBorder rounded-lg p-6 w-full max-w-md">
+        <div class="flex justify-between items-center mb-4">
+            <h2 id="taskModalTitle" class="text-xl font-semibold">Nova Tarefa</h2>
+            <button id="closeTaskModal" class="text-grayText hover:text-white">
+                <i class="ph-fill ph-x text-xl"></i>
+            </button>
+        </div>
+        <form id="taskForm">
+            <input type="hidden" id="taskId">
+            <div class="mb-4">
+                <label for="taskTitle" class="block text-grayText mb-1">Título</label>
+                <input type="text" id="taskTitle" required
+                    class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary">
+            </div>
+            <div class="mb-4">
+                <label for="taskDescription" class="block text-grayText mb-1">Descrição</label>
+                <textarea id="taskDescription" rows="3"
+                    class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary"></textarea>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label for="taskProject" class="block text-grayText mb-1">Projeto</label>
+                    <select id="taskProject" required
+                        class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary">
+                        <option value="">Selecione um projeto</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="taskDueDate" class="block text-grayText mb-1">Data de Entrega</label>
+                    <input type="date" id="taskDueDate"
+                        class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label for="taskPriority" class="block text-grayText mb-1">Prioridade</label>
+                    <select id="taskPriority" required
+                        class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary">
+                        <option value="low">Baixa</option>
+                        <option value="medium" selected>Média</option>
+                        <option value="high">Alta</option>
+                        <option value="urgent">Urgente</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="taskStatus" class="block text-grayText mb-1">Status</label>
+                    <select id="taskStatus" required
+                        class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary">
+                        <option value="todo" selected>A Fazer</option>
+                        <option value="in-progress">Em Andamento</option>
+                        <option value="done">Concluído</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button type="button" id="cancelTask" class="px-4 py-2 border border-darkBorder rounded-lg hover:bg-darkBorder">
+                    Cancelar
+                </button>
+                <button type="submit" class="bg-primary hover:bg-purple-600 text-white px-4 py-2 rounded-lg">
+                    Salvar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de Detalhes da Tarefa -->
+<div id="taskDetailsModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+    <div class="bg-darkPanel border border-darkBorder rounded-lg p-6 w-full max-w-md">
+        <div class="flex justify-between items-center mb-4">
+            <h2 id="detailsTaskTitle" class="text-xl font-semibold">Detalhes da Tarefa</h2>
+            <button id="closeTaskDetailsModal" class="text-grayText hover:text-white">
+                <i class="ph-fill ph-x text-xl"></i>
+            </button>
+        </div>
+        <div id="taskDetailsContent">
+            <div class="text-center py-8">
+                <p class="text-grayText">Carregando detalhes...</p>
+            </div>
+        </div>
+    </div>
+</div>
 
 
     <!-- Scripts -->
@@ -323,6 +312,7 @@
     <script src="auth.js"></script>
     <script src="theme.js"></script>
     <script src="sidebar.js"></script>
+    <script src="backlog.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             // Verificar autenticação

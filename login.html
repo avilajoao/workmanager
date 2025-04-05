@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - WorkManager</title>
+    <title>Login - Construtora</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <script src="init-data.js"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -27,177 +25,70 @@
         };
     </script>
 </head>
-<body class="bg-darkBg text-white font-sans">
+<body class="bg-darkBg text-white font-sans min-h-screen flex items-center justify-center">
 
-    <div class="min-h-screen flex items-center justify-center p-4">
-        <div class="bg-darkPanel border border-darkBorder rounded-lg p-8 w-full max-w-md">
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-primary">WorkManager</h1>
-                <p class="text-grayText mt-2">Sistema de Gestão para Construtoras</p>
+    <div class="w-full max-w-md p-8 bg-darkPanel rounded-lg border border-darkBorder">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-primary">WorkManager</h1>
+            <p class="text-grayText mt-2">Sistema de Gestão para Construtoras</p>
+        </div>
+        
+        <form id="loginForm" class="space-y-6">
+            <div>
+                <label for="email" class="block text-grayText mb-1">Email</label>
+                <input type="email" id="email" name="email" 
+                    class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary"
+                    value="joao@exemplo.com" required>
             </div>
             
-            <div id="loginForm">
-                <h2 class="text-xl font-semibold mb-6">Entrar na sua conta</h2>
-                
-                <div id="loginError" class="bg-red-900/30 border border-red-800 text-red-200 px-4 py-3 rounded-lg mb-4 hidden">
-                    Credenciais inválidas. Por favor, tente novamente.
-                </div>
-                
-                <form id="login-form" class="space-y-4">
-                    <div>
-                        <label for="email" class="block text-grayText mb-1">Email</label>
-                        <input type="email" id="email" name="email" 
-                            class="w-full px-4 py-2 rounded-lg bg-darkBg border border-darkBorder focus:border-primary focus:outline-none"
-                            required>
-                    </div>
-                    
-                    <div>
-                        <label for="password" class="block text-grayText mb-1">Senha</label>
-                        <input type="password" id="password" name="password" 
-                            class="w-full px-4 py-2 rounded-lg bg-darkBg border border-darkBorder focus:border-primary focus:outline-none"
-                            required>
-                    </div>
-                    
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <input type="checkbox" id="remember" name="remember" class="mr-2">
-                            <label for="remember" class="text-grayText">Lembrar-me</label>
-                        </div>
-                        <a href="#" class="text-primary hover:underline">Esqueceu a senha?</a>
-                    </div>
-                    
-                    <button type="submit" 
-                        class="w-full bg-primary hover:bg-purple-600 text-white py-2 px-4 rounded-lg transition-colors">
-                        Entrar
-                    </button>
-                </form>
-                
-                <div class="mt-6 text-center">
-                    <p class="text-grayText">
-                        Não tem uma conta? 
-                        <a href="#" id="showRegister" class="text-primary hover:underline">Registre-se</a>
-                    </p>
-                </div>
+            <div>
+                <label for="password" class="block text-grayText mb-1">Senha</label>
+                <input type="password" id="password" name="password" 
+                    class="w-full bg-darkBg border border-darkBorder rounded-lg px-4 py-2 focus:outline-none focus:border-primary"
+                    value="senha123" required>
             </div>
             
-            <div id="registerForm" class="hidden">
-                <h2 class="text-xl font-semibold mb-6">Criar nova conta</h2>
-                
-                <div id="registerError" class="bg-red-900/30 border border-red-800 text-red-200 px-4 py-3 rounded-lg mb-4 hidden">
-                    Erro ao criar conta. Por favor, tente novamente.
-                </div>
-                
-                <form id="register-form" class="space-y-4">
-                    <div>
-                        <label for="register-name" class="block text-grayText mb-1">Nome completo</label>
-                        <input type="text" id="register-name" name="name" 
-                            class="w-full px-4 py-2 rounded-lg bg-darkBg border border-darkBorder focus:border-primary focus:outline-none"
-                            required>
-                    </div>
-                    
-                    <div>
-                        <label for="register-email" class="block text-grayText mb-1">Email</label>
-                        <input type="email" id="register-email" name="email" 
-                            class="w-full px-4 py-2 rounded-lg bg-darkBg border border-darkBorder focus:border-primary focus:outline-none"
-                            required>
-                    </div>
-                    
-                    <div>
-                        <label for="register-password" class="block text-grayText mb-1">Senha</label>
-                        <input type="password" id="register-password" name="password" 
-                            class="w-full px-4 py-2 rounded-lg bg-darkBg border border-darkBorder focus:border-primary focus:outline-none"
-                            required>
-                    </div>
-                    
-                    <div>
-                        <label for="register-confirm-password" class="block text-grayText mb-1">Confirmar senha</label>
-                        <input type="password" id="register-confirm-password" name="confirmPassword" 
-                            class="w-full px-4 py-2 rounded-lg bg-darkBg border border-darkBorder focus:border-primary focus:outline-none"
-                            required>
-                    </div>
-                    
-                    <button type="submit" 
-                        class="w-full bg-primary hover:bg-purple-600 text-white py-2 px-4 rounded-lg transition-colors">
-                        Registrar
-                    </button>
-                </form>
-                
-                <div class="mt-6 text-center">
-                    <p class="text-grayText">
-                        Já tem uma conta? 
-                        <a href="#" id="showLogin" class="text-primary hover:underline">Entrar</a>
-                    </p>
-                </div>
-            </div>
+            <div id="loginError" class="text-red-500 text-sm hidden"></div>
+            
+            <button type="submit" class="w-full bg-primary hover:bg-purple-600 text-white py-2 rounded-lg transition-colors">
+                Entrar
+            </button>
+        </form>
+        
+        <div class="mt-6 text-center text-sm text-grayText">
+            <p>Usuário de teste: joao@exemplo.com</p>
+            <p>Senha de teste: senha123</p>
         </div>
     </div>
 
-    <script src="api-mock.js"></script>
     <script src="auth.js"></script>
+    <script src="api-mock.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Verificar se já está autenticado
+        // Verificar se o usuário já está autenticado
+        document.addEventListener('DOMContentLoaded', function() {
             if (auth.isAuthenticated()) {
+                // Se já estiver autenticado, redirecionar para a página principal
                 window.location.href = 'home.html';
-                return;
             }
+        });
+        
+        // Processar formulário de login
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
             
-            // Alternar entre login e registro
-            document.getElementById('showRegister').addEventListener('click', (e) => {
-                e.preventDefault();
-                document.getElementById('loginForm').classList.add('hidden');
-                document.getElementById('registerForm').classList.remove('hidden');
-            });
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
             
-            document.getElementById('showLogin').addEventListener('click', (e) => {
-                e.preventDefault();
-                document.getElementById('registerForm').classList.add('hidden');
-                document.getElementById('loginForm').classList.remove('hidden');
-            });
+            const result = auth.login(email, password);
             
-            // Formulário de login
-            document.getElementById('login-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-                
-                try {
-                    await auth.login(email, password);
-                    window.location.href = 'home.html';
-                } catch (error) {
-                    document.getElementById('loginError').classList.remove('hidden');
-                    console.error('Erro de login:', error);
-                }
-            });
-            
-            // Formulário de registro
-            document.getElementById('register-form').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const name = document.getElementById('register-name').value;
-                const email = document.getElementById('register-email').value;
-                const password = document.getElementById('register-password').value;
-                const confirmPassword = document.getElementById('register-confirm-password').value;
-                
-                // Validar senhas
-                if (password !== confirmPassword) {
-                    document.getElementById('registerError').textContent = 'As senhas não coincidem.';
-                    document.getElementById('registerError').classList.remove('hidden');
-                    return;
-                }
-                
-                try {
-                    await auth.register({ name, email, password });
-                    window.location.href = 'home.html';
-                } catch (error) {
-                    document.getElementById('registerError').textContent = error.message || 'Erro ao criar conta.';
-                    document.getElementById('registerError').classList.remove('hidden');
-                    console.error('Erro de registro:', error);
-                }
-            });
+            if (!result.success) {
+                // Exibir mensagem de erro
+                const errorElement = document.getElementById('loginError');
+                errorElement.textContent = result.message;
+                errorElement.classList.remove('hidden');
+            }
+            // Não precisamos redirecionar aqui, pois a função auth.login já faz isso
         });
     </script>
-
 </body>
 </html>

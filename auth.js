@@ -1,128 +1,89 @@
-// Módulo de autenticação
-const auth = {
+// auth.js - Gerenciamento de autenticação
+
+const auth = (function() {
     // Verificar se o usuário está autenticado
-    isAuthenticated() {
-        const token = localStorage.getItem('token');
-        const expiresAt = localStorage.getItem('expiresAt');
-        
-        if (!token || !expiresAt) {
-            return false;
-        }
-        
-        // Verificar se o token expirou
-        const now = new Date();
-        const expiration = new Date(expiresAt);
-        
-        return now < expiration;
-    },
+    function isAuthenticated() {
+        return localStorage.getItem('authToken') !== null;
+    }
     
     // Obter token de autenticação
-    getToken() {
-        return localStorage.getItem('token');
-    },
+    function getToken() {
+        return localStorage.getItem('authToken');
+    }
     
-    // Obter usuário atual
-    getCurrentUser() {
-        const userJson = localStorage.getItem('user');
-        return userJson ? JSON.parse(userJson) : null;
-    },
+    // Obter dados do usuário atual
+    function getCurrentUser() {
+        const userString = localStorage.getItem('currentUser');
+        return userString ? JSON.parse(userString) : null;
+    }
     
     // Fazer login
-    async login(email, password) {
-        try {
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ email, password })
-            });
-            
+    function login(email, password) {
+        return fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+        })
+        .then(response => {
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Falha na autenticação');
+                throw new Error('Credenciais inválidas');
             }
+            return response.json();
+        })
+        .then(data => {
+            // Salvar token e dados do usuário
+            localStorage.setItem('authToken', data.token);
+            localStorage.setItem('currentUser', JSON.stringify(data.user));
             
-            const data = await response.json();
+            // Redirecionar para a página principal
+            window.location.href = 'home.html';
             
-            // Salvar dados de autenticação
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            localStorage.setItem('expiresAt', data.expiresAt);
-            
-            return data.user;
-        } catch (error) {
+            return { success: true };
+        })
+        .catch(error => {
             console.error('Erro de login:', error);
-            throw error;
-        }
-    },
-    
-    // Fazer registro
-    async register(userData) {
-        try {
-            const response = await fetch('/api/auth/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(userData)
-            });
-            
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Falha no registro');
-            }
-            
-            const data = await response.json();
-            
-            // Salvar dados de autenticação
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            localStorage.setItem('expiresAt', data.expiresAt);
-            
-            return data.user;
-        } catch (error) {
-            console.error('Erro de registro:', error);
-            throw error;
-        }
-    },
+            return { 
+                success: false, 
+                message: error.message || 'Falha ao fazer login. Verifique suas credenciais.'
+            };
+        });
+    }
     
     // Fazer logout
-    logout() {
+    function logout() {
         // Limpar dados de autenticação
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('expiresAt');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('currentUser');
         
         // Redirecionar para a página de login
         window.location.href = 'login.html';
-    },
-    
-    // Renovar token
-    async refreshToken() {
-        try {
-            const response = await fetch('/api/auth/refresh', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${this.getToken()}`
-                }
-            });
-            
-            if (!response.ok) {
-                throw new Error('Falha ao renovar token');
-            }
-            
-            const data = await response.json();
-            
-            // Atualizar token e data de expiração
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('expiresAt', data.expiresAt);
-            
-            return data.token;
-        } catch (error) {
-            console.error('Erro ao renovar token:', error);
-            this.logout();
-            throw error;
-        }
     }
-};
+    
+    // API pública
+    return {
+        isAuthenticated,
+        getToken,
+        getCurrentUser,
+        login,
+        logout
+    };
+})();
+
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    
+    auth.login(email, password).then(result => {
+        if (!result.success) {
+            // Exibir mensagem de erro
+            const errorElement = document.getElementById('loginError');
+            errorElement.textContent = result.message;
+            errorElement.classList.remove('hidden');
+        }
+        // Não precisamos redirecionar aqui, pois a função auth.login já faz isso
+    });
+});
