@@ -54,28 +54,34 @@ const themeManager = {
             }
         }
         
-        // Salvar tema no localStorage
+        // Salvar preferência
         localStorage.setItem('theme', theme);
     },
     
+    // Alternar tema
+    toggleTheme() {
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        this.applyTheme(newTheme);
+    },
+    
     // Inicializar tema
-    initialize() {
-        // Carregar tema salvo
-        const savedTheme = localStorage.getItem('theme') || 'dark';
+    initTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
         this.applyTheme(savedTheme);
-        
-        // Adicionar evento ao botão de alternar tema
-        const themeToggle = document.getElementById('toggleDarkMode');
-        if (themeToggle) {
-            themeToggle.addEventListener('click', () => {
-                const newTheme = document.body.classList.contains('bg-darkBg') ? 'light' : 'dark';
-                this.applyTheme(newTheme);
-            });
-        }
     }
 };
 
 // Inicializar quando o DOM estiver pronto
 document.addEventListener('DOMContentLoaded', () => {
-    themeManager.initialize();
+    // Inicializar tema
+    themeManager.initTheme();
+    
+    // Configurar botão de alternar tema
+    const themeToggle = document.getElementById('toggleDarkMode');
+    if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            themeManager.toggleTheme();
+        });
+    }
 });
