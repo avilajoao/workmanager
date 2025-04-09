@@ -1,41 +1,115 @@
-// backlog.js - Gerenciamento do backlog de tarefas
+// backlog.js - Gerenciamento do backlog de projetos
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Inicializando página de backlog');
+    
+    // Verificar autenticação
+    if (!window.auth || !window.auth.isAuthenticated) {
+        console.error('Módulo de autenticação não encontrado ou incompleto');
+        return;
+    }
+    
+    if (!window.auth.isAuthenticated()) {
+        console.log('Usuário não autenticado, redirecionando...');
+        window.location.href = 'login.html';
+        return;
+    }
+    
+    // Inicializar a página
+    initPage();
+});
 
-// Variáveis globais
-let projects = [];
-
-// Inicializar página
+// Função para inicializar a página
 async function initPage() {
+    console.log('Configurando página de backlog');
+    
     // Configurar data atual
-    const today = new Date();
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    document.getElementById('current-date').textContent = today.toLocaleDateString('pt-BR', options);
+    updateCurrentDate();
     
     // Configurar iniciais do usuário
+    setupUserInfo();
+    
+    // Configurar eventos
+    setupEventListeners();
+    
+    // Carregar projetos
+    await loadProjects();
+    
+    // Configurar drag and drop
+    setupDragAndDrop();
+    
+    console.log('Página de backlog inicializada com sucesso');
+}
+
+// Função para atualizar a data atual
+function updateCurrentDate() {
+    const currentDateElement = document.getElementById('current-date');
+    if (!currentDateElement) return;
+    
+    const today = new Date();
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const formattedDate = today.toLocaleDateString('pt-BR', options);
+    
+    currentDateElement.textContent = formattedDate;
+    console.log('Data atual atualizada:', formattedDate);
+}
+
+// Função para configurar informações do usuário
+function setupUserInfo() {
     const user = auth.getCurrentUser();
-    if (user) {
+    if (!user) return;
+    
+    // Configurar iniciais do usuário
+    const userInitialsElement = document.getElementById('userInitials');
+    if (userInitialsElement) {
         const initials = user.name.split(' ')
             .map(name => name[0])
             .slice(0, 2)
             .join('')
             .toUpperCase();
         
-        document.getElementById('userInitials').textContent = initials;
-        document.getElementById('userName').textContent = user.name;
+        userInitialsElement.textContent = initials;
     }
     
-    // Carregar projetos
-    await loadProjects();
+    // Configurar nome do usuário
+    const userNameElement = document.getElementById('userName');
+    if (userNameElement) {
+        userNameElement.textContent = user.name;
+    }
     
-    // Carregar tarefas
-    await loadTasks();
+    // Configurar cargo do usuário
+    const userRoleElement = document.getElementById('userRole');
+    if (userRoleElement && user.role) {
+        userRoleElement.textContent = user.role;
+    }
     
-    // Configurar eventos
-    setupEventListeners();
+    console.log('Informações do usuário configuradas');
 }
 
-// Carregar projetos
+// Função para carregar projetos
 async function loadProjects() {
+    console.log('Carregando projetos...');
+    
+    const projectsList = document.getElementById('projectsList');
+    if (!projectsList) {
+        console.error('Elemento projectsList não encontrado');
+        return;
+    }
+    
     try {
+        // Obter filtros
+        const statusFilter = document.getElementById('filterStatus')?.value || '';
+        const searchTerm = document.getElementById('searchProjects')?.value?.toLowerCase() || '';
+        
+        console.log('Filtros:', { statusFilter, searchTerm });
+        
+        // Mostrar indicador de carregamento
+        projectsList.innerHTML = `
+            <div class="col-span-full flex justify-center py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+            </div>
+        `;
+        
+        // Fazer requisição para a API
         const response = await fetch('/api/projects', {
             headers: {
                 'Authorization': `Bearer ${auth.getToken()}`
@@ -43,772 +117,447 @@ async function loadProjects() {
         });
         
         if (!response.ok) {
-            throw new Error('Falha ao carregar projetos');
+            throw new Error(`Falha ao carregar projetos: ${response.status}`);
         }
         
-        projects = await response.json();
+        let projects = await response.json();
+        console.log('Projetos carregados:', projects);
         
-        // Preencher selects de projetos
-        const projectSelects = [
-            document.getElementById('filterProject'),
-            document.getElementById('taskProject')
-        ];
+        // Aplicar filtros
+        if (statusFilter) {
+            projects = projects.filter(project => project.status === statusFilter);
+        }
         
-        projectSelects.forEach(select => {
-            // Manter a primeira opção (vazia/selecione)
-            const firstOption = select.options[0];
-            select.innerHTML = '';
-            select.appendChild(firstOption);
-            
-            // Adicionar projetos
-            projects.forEach(project => {
-                const option = document.createElement('option');
-                option.value = project.id;
-                option.textContent = project.name;
-                select.appendChild(option);
-            });
+        if (searchTerm) {
+            projects = projects.filter(project => 
+                project.name.toLowerCase().includes(searchTerm) || 
+                (project.description && project.description.toLowerCase().includes(searchTerm))
+            );
+        }
+        
+        console.log('Projetos após filtros:', projects);
+        
+        // Limpar lista
+        projectsList.innerHTML = '';
+        
+        // Verificar se há projetos
+        if (projects.length === 0) {
+            projectsList.innerHTML = `
+                <div class="col-span-full text-center py-12">
+                    <i class="ph ph-folder-notch-open text-5xl text-grayText mb-4"></i>
+                    <p class="text-grayText">Nenhum projeto encontrado</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Renderizar projetos
+        projects.forEach(project => {
+            const card = createProjectCard(project);
+            projectsList.appendChild(card);
         });
+        
+        // Aplicar ordem salva
+        if (window.applyProjectOrder) {
+            window.applyProjectOrder();
+        }
+        
+        console.log('Projetos renderizados com sucesso');
         
     } catch (error) {
         console.error('Erro ao carregar projetos:', error);
-        alert('Erro ao carregar projetos. Por favor, recarregue a página.');
-    }
-}
-// Carregar tarefas
-async function loadTasks() {
-    try {
-        // Buscar tarefas
-        const response = await fetch('/api/tasks', {
-            headers: {
-                'Authorization': `Bearer ${auth.getToken()}`
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error('Falha ao carregar tarefas');
-        }
-        
-        const tasks = await response.json();
-        
-        // Agrupar tarefas por status
-        const tasksByStatus = {
-            'todo': tasks.filter(task => task.status === 'todo'),
-            'in-progress': tasks.filter(task => task.status === 'in-progress'),
-            'done': tasks.filter(task => task.status === 'done')
-        };
-        
-        // Limpar colunas
-        document.getElementById('todo-tasks').innerHTML = '';
-        document.getElementById('in-progress-tasks').innerHTML = '';
-        document.getElementById('done-tasks').innerHTML = '';
-        
-        // Verificar se há tarefas
-        if (tasks.length === 0) {
-            document.getElementById('todo-tasks').innerHTML = `
-                <div class="text-center py-8 text-grayText">
-                    <p>Nenhuma tarefa encontrada</p>
-                    <button id="createFirstTask" class="mt-4 bg-primary px-4 py-2 rounded-lg text-white hover:bg-purple-600">
-                        Criar primeira tarefa
-                    </button>
-                </div>
-            `;
-            
-            document.getElementById('in-progress-tasks').innerHTML = `
-                <div class="text-center py-8 text-grayText">
-                    <p>Nenhuma tarefa em andamento</p>
-                </div>
-            `;
-            
-            document.getElementById('done-tasks').innerHTML = `
-                <div class="text-center py-8 text-grayText">
-                    <p>Nenhuma tarefa concluída</p>
-                </div>
-            `;
-            
-            document.getElementById('createFirstTask')?.addEventListener('click', () => {
-                document.getElementById('newTaskBtn').click();
-            });
-            
-            // Atualizar contadores
-            document.getElementById('todo-count').textContent = '0';
-            document.getElementById('in-progress-count').textContent = '0';
-            document.getElementById('done-count').textContent = '0';
-            
-            return;
-        }
-        // Preencher colunas com tarefas
-        Object.keys(tasksByStatus).forEach(status => {
-            const columnId = `${status}-tasks`;
-            const column = document.getElementById(columnId);
-            const statusTasks = tasksByStatus[status];
-            
-            if (statusTasks.length === 0) {
-                column.innerHTML = `
-                    <div class="text-center py-8 text-grayText">
-                        <p>Nenhuma tarefa ${getStatusLabel(status).toLowerCase()}</p>
-                    </div>
-                `;
-            } else {
-                column.innerHTML = '';
-                statusTasks.forEach(task => {
-                    // Buscar nome do projeto
-                    const project = projects.find(p => p.id === task.projectId) || { name: 'Projeto não encontrado' };
-                    const taskCard = createTaskCard(task, project);
-                    column.appendChild(taskCard);
-                });
-            }
-            
-            // Atualizar contador
-            document.getElementById(`${status}-count`).textContent = statusTasks.length;
-        });
-        
-    } catch (error) {
-        console.error('Erro ao carregar tarefas:', error);
-        
-        // Exibir mensagem de erro
-        document.getElementById('todo-tasks').innerHTML = `
-            <div class="text-center py-8 text-red-500">
-                <i class="ph-fill ph-warning text-4xl mb-2"></i>
-                <p>Erro ao carregar tarefas: ${error.message}</p>
-                <button id="retryLoadTasks" class="mt-4 bg-primary px-4 py-2 rounded-lg text-white hover:bg-purple-600">
+        projectsList.innerHTML = `
+            <div class="col-span-full text-center py-12">
+                <i class="ph ph-warning-circle text-5xl text-red-500 mb-4"></i>
+                <p class="text-red-500">Erro ao carregar projetos: ${error.message}</p>
+                <button id="retryLoadProjects" class="mt-4 px-4 py-2 bg-primary hover:bg-purple-700 rounded-lg transition-colors">
                     Tentar novamente
                 </button>
             </div>
         `;
         
-        document.getElementById('in-progress-tasks').innerHTML = '';
-        document.getElementById('done-tasks').innerHTML = '';
-        
-        document.getElementById('retryLoadTasks')?.addEventListener('click', loadTasks);
-    }
-}
-
-// Obter label do status
-function getStatusLabel(status) {
-    const statusMap = {
-        'todo': 'A Fazer',
-        'in-progress': 'Em Andamento',
-        'done': 'Concluído'
-    };
-    
-    return statusMap[status] || status;
-}
-
-// Criar card de tarefa
-function createTaskCard(task, project) {
-    const card = document.createElement('div');
-    card.className = 'task-card bg-darkPanel border border-darkBorder rounded-lg p-4 hover:border-primary';
-    card.dataset.taskId = task.id;
-    
-    // Formatar data de entrega
-    let dueDateDisplay = '';
-    if (task.dueDate) {
-        const dueDate = new Date(task.dueDate);
-        const today = new Date();
-        const tomorrow = new Date();
-        tomorrow.setDate(today.getDate() + 1);
-        
-        const formattedDate = dueDate.toLocaleDateString('pt-BR');
-        
-        if (dueDate.toDateString() === today.toDateString()) {
-            dueDateDisplay = `<span class="text-yellow-300">Hoje</span>`;
-        } else if (dueDate.toDateString() === tomorrow.toDateString()) {
-            dueDateDisplay = `<span class="text-yellow-300">Amanhã</span>`;
-        } else if (dueDate < today) {
-            dueDateDisplay = `<span class="text-red-400">Atrasado (${formattedDate})</span>`;
-        } else {
-            dueDateDisplay = formattedDate;
+        // Adicionar event listener para o botão de tentar novamente
+        const retryButton = document.getElementById('retryLoadProjects');
+        if (retryButton) {
+            retryButton.addEventListener('click', loadProjects);
         }
     }
+}
+
+// Função para configurar os event listeners da página
+function setupEventListeners() {
+    console.log('Configurando event listeners');
+    
+    // Event listener para o filtro de status
+    const filterStatus = document.getElementById('filterStatus');
+    if (filterStatus) {
+        filterStatus.addEventListener('change', async () => {
+            await loadProjects();
+        });
+    }
+    
+    // Event listener para a busca
+    const searchProjects = document.getElementById('searchProjects');
+    if (searchProjects) {
+        searchProjects.addEventListener('input', debounce(async () => {
+            await loadProjects();
+        }, 300)); // Debounce para evitar muitas requisições
+    }
+    
+    // Event listener para o botão de novo projeto
+    const newProjectBtn = document.getElementById('newProjectBtn');
+    if (newProjectBtn) {
+        newProjectBtn.addEventListener('click', () => {
+            openModal('newProjectModal');
+        });
+    }
+    
+    // Event listener para o formulário de novo projeto
+    const newProjectForm = document.getElementById('newProjectForm');
+    if (newProjectForm) {
+        newProjectForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            await createProject();
+        });
+    }
+    
+    // Event listeners para fechar modais
+    const closeButtons = document.querySelectorAll('.close-modal');
+    closeButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const modalId = button.getAttribute('data-modal') || button.closest('.modal').id;
+            closeModal(modalId);
+        });
+    });
+    
+    // Event listener para botões de cancelar nos modais
+    const cancelButtons = document.querySelectorAll('.cancel-modal');
+    cancelButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const modalId = button.getAttribute('data-modal') || button.closest('.modal').id;
+            closeModal(modalId);
+        });
+    });
+    
+    // Event listener para fechar modal clicando fora
+    document.addEventListener('click', (event) => {
+        const modals = document.querySelectorAll('.modal:not(.hidden)');
+        modals.forEach(modal => {
+            if (event.target === modal) {
+                closeModal(modal.id);
+            }
+        });
+    });
+    
+    console.log('Event listeners configurados com sucesso');
+}
+
+// Função para criar um card de projeto
+function createProjectCard(project) {
+    const card = document.createElement('div');
+    card.className = 'bg-darkPanel border border-darkBorder rounded-lg p-4 hover:shadow-lg transition-all';
+    card.setAttribute('data-project-id', project.id);
+    
+    // Formatar datas
+    const startDate = project.startDate ? new Date(project.startDate).toLocaleDateString('pt-BR') : 'Não definida';
+    const endDate = project.endDate ? new Date(project.endDate).toLocaleDateString('pt-BR') : 'Não definida';
+    
+    // Formatar orçamento
+    const budget = project.budget 
+        ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(project.budget) 
+        : 'Não definido';
+    
+    // Mapear status para texto em português
+    const statusMap = {
+        'planning': 'Planejamento',
+        'in-progress': 'Em Andamento',
+        'on-hold': 'Em Espera',
+        'completed': 'Concluído',
+        'cancelled': 'Cancelado'
+    };
+    
+    const statusText = statusMap[project.status] || project.status;
     
     card.innerHTML = `
-        <div class="flex justify-between items-start mb-2">
-            <h3 class="font-medium">${task.title}</h3>
-            <span class="priority-${task.priority} text-xs px-2 py-1 rounded-full border">
-                ${getPriorityLabel(task.priority)}
+        <div class="flex justify-between items-start mb-3">
+            <div class="flex items-center">
+                <div class="drag-handle cursor-move mr-2 text-gray-400 hover:text-white">
+                    <i class="ph ph-dots-six-vertical"></i>
+                </div>
+                <h3 class="text-lg font-semibold">${project.name}</h3>
+            </div>
+            <div class="flex space-x-2">
+                <button class="edit-project text-gray-400 hover:text-white" data-project-id="${project.id}">
+                    <i class="ph ph-pencil-simple"></i>
+                </button>
+                <button class="delete-project text-gray-400 hover:text-red-500" data-project-id="${project.id}">
+                    <i class="ph ph-trash"></i>
+                </button>
+            </div>
+        </div>
+        <p class="text-grayText mb-4">${project.description || 'Sem descrição'}</p>
+        <div class="flex flex-wrap gap-2 mb-4">
+            <span class="status-${project.status} text-xs px-2 py-1 rounded-full border">
+                ${statusText}
             </span>
         </div>
-        <p class="text-grayText text-sm mb-3 line-clamp-2">${task.description || 'Sem descrição'}</p>
-        <div class="flex justify-between items-center">
-            <span class="bg-darkBg text-xs px-2 py-1 rounded-full">
-                ${project.name}
-            </span>
-            ${dueDateDisplay ? `<span class="text-xs">${dueDateDisplay}</span>` : ''}
+        <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+                <p class="text-grayText">Data de início</p>
+                <p>${startDate}</p>
+            </div>
+            <div>
+                <p class="text-grayText">Data de término</p>
+                <p>${endDate}</p>
+            </div>
+            <div class="col-span-2">
+                <p class="text-grayText">Orçamento</p>
+                <p>${budget}</p>
+            </div>
         </div>
     `;
     
-    // Adicionar evento de clique para abrir detalhes
-    card.addEventListener('click', () => {
-        openTaskDetails(task.id);
-    });
+    // Adicionar event listeners para os botões de editar e excluir
+    const editButton = card.querySelector('.edit-project');
+    if (editButton) {
+        editButton.addEventListener('click', () => {
+            editProject(project.id);
+        });
+    }
+    
+    const deleteButton = card.querySelector('.delete-project');
+    if (deleteButton) {
+        deleteButton.addEventListener('click', () => {
+            confirmDeleteProject(project.id);
+        });
+    }
     
     return card;
 }
 
-// Obter label da prioridade
-function getPriorityLabel(priority) {
-    const priorityMap = {
-        'urgent': 'Urgente',
-        'high': 'Alta',
-        'medium': 'Média',
-        'low': 'Baixa'
+// Função para criar um novo projeto
+async function createProject() {
+    const form = document.getElementById('newProjectForm');
+    if (!form) return;
+    
+    const formData = new FormData(form);
+    
+    // Criar objeto com os dados do projeto
+    const projectData = {
+        name: formData.get('name'),
+        description: formData.get('description'),
+        status: formData.get('status'),
+        startDate: formData.get('startDate') || null,
+        endDate: formData.get('endDate') || null,
+        budget: formData.get('budget') ? Number(formData.get('budget')) : null
     };
     
-    return priorityMap[priority] || priority;
-}
-// Abrir detalhes da tarefa
-async function openTaskDetails(taskId) {
-    try {
-        // Buscar detalhes da tarefa
-        const response = await fetch(`/api/tasks/${taskId}`, {
-            headers: {
-                'Authorization': `Bearer ${auth.getToken()}`
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error('Falha ao carregar detalhes da tarefa');
-        }
-        
-        const task = await response.json();
-        
-        // Buscar projeto
-        const project = projects.find(p => p.id === task.projectId) || { name: 'Projeto não encontrado' };
-        
-        // Formatar datas
-        const createdDate = new Date(task.createdAt).toLocaleString('pt-BR');
-        const updatedDate = task.updatedAt ? new Date(task.updatedAt).toLocaleString('pt-BR') : 'Nunca';
-        const dueDate = task.dueDate ? new Date(task.dueDate).toLocaleDateString('pt-BR') : 'Não definida';
-        
-        // Preencher modal de detalhes
-        document.getElementById('detailsTaskTitle').textContent = task.title;
-        
-        document.getElementById('taskDetailsContent').innerHTML = `
-            <div class="mb-4">
-                <p class="text-grayText mb-2">Descrição:</p>
-                <p>${task.description || 'Sem descrição'}</p>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <p class="text-grayText mb-1">Projeto:</p>
-                    <p>${project.name}</p>
-                </div>
-                <div>
-                    <p class="text-grayText mb-1">Data de Entrega:</p>
-                    <p>${dueDate}</p>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <p class="text-grayText mb-1">Prioridade:</p>
-                    <p class="inline-block priority-${task.priority} px-2 py-1 rounded-full text-sm border">
-                        ${getPriorityLabel(task.priority)}
-                    </p>
-                </div>
-                <div>
-                    <p class="text-grayText mb-1">Status:</p>
-                    <p>${getStatusLabel(task.status)}</p>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <div>
-                    <p class="text-grayText mb-1">Criado em:</p>
-                    <p>${createdDate}</p>
-                </div>
-                <div>
-                    <p class="text-grayText mb-1">Atualizado em:</p>
-                    <p>${updatedDate}</p>
-                </div>
-            </div>
-            
-            <div class="flex justify-end space-x-2">
-                <button id="editTaskBtn" class="px-4 py-2 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white">
-                    Editar
-                </button>
-                <button id="deleteTaskBtn" class="px-4 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-500 hover:text-white">
-                    Excluir
-                </button>
-            </div>
-        `;
-        
-        // Adicionar eventos aos botões
-        document.getElementById('editTaskBtn').addEventListener('click', () => {
-            editTask(task);
-        });
-        
-        document.getElementById('deleteTaskBtn').addEventListener('click', () => {
-            deleteTask(task.id);
-        });
-        
-        // Mostrar modal
-        document.getElementById('taskDetailsModal').classList.remove('hidden');
-        
-    } catch (error) {
-        console.error('Erro ao carregar detalhes da tarefa:', error);
-        alert('Erro ao carregar detalhes da tarefa. Por favor, tente novamente.');
-    }
-}
-// Abrir detalhes da tarefa
-async function openTaskDetails(taskId) {
-    try {
-        // Buscar detalhes da tarefa
-        const response = await fetch(`/api/tasks/${taskId}`, {
-            headers: {
-                'Authorization': `Bearer ${auth.getToken()}`
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error('Falha ao carregar detalhes da tarefa');
-        }
-        
-        const task = await response.json();
-        
-        // Buscar projeto
-        const project = projects.find(p => p.id === task.projectId) || { name: 'Projeto não encontrado' };
-        
-        // Formatar datas
-        const createdDate = new Date(task.createdAt).toLocaleString('pt-BR');
-        const updatedDate = task.updatedAt ? new Date(task.updatedAt).toLocaleString('pt-BR') : 'Nunca';
-        const dueDate = task.dueDate ? new Date(task.dueDate).toLocaleDateString('pt-BR') : 'Não definida';
-        
-        // Preencher modal de detalhes
-        document.getElementById('detailsTaskTitle').textContent = task.title;
-        
-        document.getElementById('taskDetailsContent').innerHTML = `
-            <div class="mb-4">
-                <p class="text-grayText mb-2">Descrição:</p>
-                <p>${task.description || 'Sem descrição'}</p>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <p class="text-grayText mb-1">Projeto:</p>
-                    <p>${project.name}</p>
-                </div>
-                <div>
-                    <p class="text-grayText mb-1">Data de Entrega:</p>
-                    <p>${dueDate}</p>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <p class="text-grayText mb-1">Prioridade:</p>
-                    <p class="inline-block priority-${task.priority} px-2 py-1 rounded-full text-sm border">
-                        ${getPriorityLabel(task.priority)}
-                    </p>
-                </div>
-                <div>
-                    <p class="text-grayText mb-1">Status:</p>
-                    <p>${getStatusLabel(task.status)}</p>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <div>
-                    <p class="text-grayText mb-1">Criado em:</p>
-                    <p>${createdDate}</p>
-                </div>
-                <div>
-                    <p class="text-grayText mb-1">Atualizado em:</p>
-                    <p>${updatedDate}</p>
-                </div>
-            </div>
-            
-            <div class="flex justify-end space-x-2">
-                <button id="editTaskBtn" class="px-4 py-2 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white">
-                    Editar
-                </button>
-                <button id="deleteTaskBtn" class="px-4 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-500 hover:text-white">
-                    Excluir
-                </button>
-            </div>
-        `;
-        
-        // Adicionar eventos aos botões
-        document.getElementById('editTaskBtn').addEventListener('click', () => {
-            editTask(task);
-        });
-        
-        document.getElementById('deleteTaskBtn').addEventListener('click', () => {
-            deleteTask(task.id);
-        });
-        
-        // Mostrar modal
-        document.getElementById('taskDetailsModal').classList.remove('hidden');
-        
-    } catch (error) {
-        console.error('Erro ao carregar detalhes da tarefa:', error);
-        alert('Erro ao carregar detalhes da tarefa. Por favor, tente novamente.');
-    }
-}
-// Configurar eventos
-function setupEventListeners() {
-    // Botão de nova tarefa
-    document.getElementById('newTaskBtn').addEventListener('click', () => {
-        // Limpar formulário
-        document.getElementById('taskForm').reset();
-        document.getElementById('taskId').value = '';
-        
-        // Atualizar título do modal
-        document.getElementById('taskModalTitle').textContent = 'Nova Tarefa';
-        
-        // Mostrar modal
-        document.getElementById('taskModal').classList.remove('hidden');
-    });
-    
-    // Formulário de tarefa
-    document.getElementById('taskForm').addEventListener('submit', saveTask);
-    
-    // Botões de fechar modal
-    document.getElementById('closeTaskModal').addEventListener('click', () => {
-        document.getElementById('taskModal').classList.add('hidden');
-    });
-    
-    document.getElementById('cancelTask').addEventListener('click', () => {
-        document.getElementById('taskModal').classList.add('hidden');
-    });
-    
-    document.getElementById('closeTaskDetailsModal').addEventListener('click', () => {
-        document.getElementById('taskDetailsModal').classList.add('hidden');
-    });
-    
-    // Toggle da sidebar
-    document.getElementById('toggleSidebar').addEventListener('click', () => {
-        document.querySelector('.sidebar').classList.toggle('expanded');
-    });
-    
-    // Toggle do modo escuro
-    document.getElementById('toggleDarkMode').addEventListener('click', toggleDarkMode);
-    
-    // Dropdown do usuário
-    document.getElementById('userProfile').addEventListener('click', (e) => {
-        e.stopPropagation();
-        document.getElementById('userDropdown').classList.toggle('hidden');
-    });
-    
-    // Fechar dropdown ao clicar fora
-    document.addEventListener('click', () => {
-        document.getElementById('userDropdown').classList.add('hidden');
-    });
-    
-    // Botão de logout
-    document.getElementById('logoutBtnDropdown').addEventListener('click', () => {
-        auth.logout();
-    });
-    
-    // Filtro de busca
-    document.getElementById('searchTasks').addEventListener('input', filterTasks);
-    
-    // Filtros de projeto e prioridade
-    document.getElementById('filterProject').addEventListener('change', filterTasks);
-    document.getElementById('filterPriority').addEventListener('change', filterTasks);
-}
-// Filtrar tarefas
-function filterTasks() {
-    const searchTerm = document.getElementById('searchTasks').value.toLowerCase();
-    const projectFilter = document.getElementById('filterProject').value;
-    const priorityFilter = document.getElementById('filterPriority').value;
-    
-    // Obter todos os cards de tarefas
-    const taskCards = document.querySelectorAll('.task-card');
-    
-    taskCards.forEach(card => {
-        const taskId = card.dataset.taskId;
-        
-        // Buscar tarefa correspondente
-        fetch(`/api/tasks/${taskId}`, {
-            headers: {
-                'Authorization': `Bearer ${auth.getToken()}`
-            }
-        })
-        .then(response => response.json())
-        .then(task => {
-            // Verificar filtros
-            const matchesSearch = 
-                task.title.toLowerCase().includes(searchTerm) || 
-                (task.description && task.description.toLowerCase().includes(searchTerm));
-                
-            const matchesProject = !projectFilter || task.projectId === projectFilter;
-            const matchesPriority = !priorityFilter || task.priority === priorityFilter;
-            
-            // Mostrar ou esconder card
-            if (matchesSearch && matchesProject && matchesPriority) {
-                card.classList.remove('hidden');
-            } else {
-                card.classList.add('hidden');
-            }
-            
-            // Atualizar contadores
-            updateCounters();
-        })
-        .catch(error => {
-            console.error('Erro ao filtrar tarefa:', error);
-        });
-    });
-}
-
-// Atualizar contadores
-function updateCounters() {
-    const statuses = ['todo', 'in-progress', 'done'];
-    
-    statuses.forEach(status => {
-        const column = document.getElementById(`${status}-tasks`);
-        const visibleCards = column.querySelectorAll('.task-card:not(.hidden)').length;
-        
-        document.getElementById(`${status}-count`).textContent = visibleCards;
-        
-        // Mostrar mensagem se não houver tarefas visíveis
-        if (visibleCards === 0) {
-            const hasNoTasksMessage = column.querySelector('.text-center.py-8.text-grayText');
-            
-            if (!hasNoTasksMessage) {
-                column.innerHTML = `
-                    <div class="text-center py-8 text-grayText">
-                        <p>Nenhuma tarefa ${getStatusLabel(status).toLowerCase()} corresponde aos filtros</p>
-                    </div>
-                ` + column.innerHTML;
-            }
-        } else {
-            const noTasksMessage = column.querySelector('.text-center.py-8.text-grayText');
-            if (noTasksMessage) {
-                noTasksMessage.remove();
-            }
-        }
-    });
-}
-
-// Toggle do modo escuro
-function toggleDarkMode() {
-    const body = document.body;
-    const isDark = body.classList.contains('bg-darkBg');
-    
-    if (isDark) {
-        // Mudar para modo claro
-        body.classList.remove('bg-darkBg', 'text-white');
-        body.classList.add('bg-lightBg', 'text-lightText');
-        
-        document.querySelectorAll('.panel').forEach(panel => {
-            panel.classList.remove('bg-darkPanel', 'border-darkBorder');
-            panel.classList.add('bg-lightPanel', 'border-lightBorder');
-        });
-        
-        document.getElementById('toggleDarkMode').innerHTML = '<i class="ph-fill ph-sun"></i>';
-    } else {
-        // Mudar para modo escuro
-        body.classList.remove('bg-lightBg', 'text-lightText');
-        body.classList.add('bg-darkBg', 'text-white');
-        
-        document.querySelectorAll('.panel').forEach(panel => {
-            panel.classList.remove('bg-lightPanel', 'border-lightBorder');
-            panel.classList.add('bg-darkPanel', 'border-darkBorder');
-        });
-        
-        document.getElementById('toggleDarkMode').innerHTML = '<i class="ph-fill ph-moon"></i>';
-    }
-    
-    // Salvar preferência
-    localStorage.setItem('theme', isDark ? 'light' : 'dark');
-}
-
-// Inicializar página quando o DOM estiver carregado
-document.addEventListener('DOMContentLoaded', initPage);
-
-// Configurar drag and drop
-function setupDragAndDrop() {
-    // Configurar elementos arrastáveis
-    document.querySelectorAll('.task-card').forEach(card => {
-        card.setAttribute('draggable', 'true');
-        
-        card.addEventListener('dragstart', (e) => {
-            e.dataTransfer.setData('text/plain', card.dataset.taskId);
-            card.classList.add('opacity-50');
-        });
-        
-        card.addEventListener('dragend', () => {
-            card.classList.remove('opacity-50');
-        });
-    });
-    
-    // Configurar áreas de soltar
-    document.querySelectorAll('.kanban-column').forEach(column => {
-        column.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            column.classList.add('bg-opacity-10', 'bg-primary');
-        });
-        
-        column.addEventListener('dragleave', () => {
-            column.classList.remove('bg-opacity-10', 'bg-primary');
-        });
-        
-        column.addEventListener('drop', async (e) => {
-            e.preventDefault();
-            column.classList.remove('bg-opacity-10', 'bg-primary');
-            
-            const taskId = e.dataTransfer.getData('text/plain');
-            const newStatus = column.id.replace('-tasks', '');
-            
-            try {
-                // Atualizar status da tarefa
-                const response = await fetch(`/api/tasks/${taskId}`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${auth.getToken()}`
-                    },
-                    body: JSON.stringify({ status: newStatus })
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Falha ao atualizar status da tarefa');
-                }
-                
-                // Recarregar tarefas
-                await loadTasks();
-                
-            } catch (error) {
-                console.error('Erro ao mover tarefa:', error);
-                alert('Erro ao mover tarefa. Por favor, tente novamente.');
-            }
-        });
-    });
-}
-// Modificar a função loadTasks para adicionar setupDragAndDrop no final
-async function loadTasks() {
-    try {
-        // ... código existente ...
-        
-        // Preencher colunas com tarefas
-        Object.keys(tasksByStatus).forEach(status => {
-            // ... código existente ...
-        });
-        
-        // Configurar drag and drop após carregar as tarefas
-        setupDragAndDrop();
-        
-    } catch (error) {
-        // ... código existente ...
-    }
-}
-// Abrir detalhes da tarefa
-async function openTaskDetails(taskId) {
     try {
         // Mostrar indicador de carregamento
-        document.getElementById('taskDetailsContent').innerHTML = `
-            <div class="text-center py-8">
-                <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-                <p class="mt-2 text-grayText">Carregando detalhes...</p>
-            </div>
-        `;
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="ph ph-spinner ph-spin mr-1"></i> Criando...';
+        submitBtn.disabled = true;
         
-        // Mostrar modal enquanto carrega
-        document.getElementById('taskDetailsModal').classList.remove('hidden');
-        
-        // Buscar detalhes da tarefa
-        const response = await fetch(`/api/tasks/${taskId}`, {
+        // Fazer requisição para a API
+        const response = await fetch('/api/projects', {
+            method: 'POST',
             headers: {
+                'Content-Type': 'application/json',
                 'Authorization': `Bearer ${auth.getToken()}`
-            }
+            },
+            body: JSON.stringify(projectData)
         });
         
         if (!response.ok) {
-            throw new Error('Falha ao carregar detalhes da tarefa');
+            throw new Error('Falha ao criar projeto');
         }
         
-        const task = await response.json();
+        // Fechar modal e limpar formulário
+        closeModal('newProjectModal');
+        form.reset();
         
-        // Buscar projeto
-        const project = projects.find(p => p.id === task.projectId) || { name: 'Projeto não encontrado' };
+        // Recarregar projetos
+        await loadProjects();
         
-        // Formatar datas
-        const createdDate = new Date(task.createdAt).toLocaleString('pt-BR');
-        const updatedDate = task.updatedAt ? new Date(task.updatedAt).toLocaleString('pt-BR') : 'Nunca';
-        const dueDate = task.dueDate ? new Date(task.dueDate).toLocaleDateString('pt-BR') : 'Não definida';
-        
-        // Preencher modal de detalhes
-        document.getElementById('detailsTaskTitle').textContent = task.title;
-        
-        document.getElementById('taskDetailsContent').innerHTML = `
-            <div class="mb-4">
-                <p class="text-grayText mb-2">Descrição:</p>
-                <p class="bg-darkBg p-3 rounded-lg">${task.description || 'Sem descrição'}</p>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <p class="text-grayText mb-1">Projeto:</p>
-                    <p class="font-medium">${project.name}</p>
-                </div>
-                <div>
-                    <p class="text-grayText mb-1">Data de Entrega:</p>
-                    <p class="font-medium">${dueDate}</p>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                    <p class="text-grayText mb-1">Prioridade:</p>
-                    <p class="inline-block priority-${task.priority} px-2 py-1 rounded-full text-sm border">
-                        ${getPriorityLabel(task.priority)}
-                    </p>
-                </div>
-                <div>
-                    <p class="text-grayText mb-1">Status:</p>
-                    <p class="font-medium">${getStatusLabel(task.status)}</p>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-2 gap-4 mb-6">
-                <div>
-                    <p class="text-grayText mb-1">Criado em:</p>
-                    <p class="text-sm">${createdDate}</p>
-                </div>
-                <div>
-                    <p class="text-grayText mb-1">Atualizado em:</p>
-                    <p class="text-sm">${updatedDate}</p>
-                </div>
-            </div>
-            
-            <div class="flex justify-end space-x-2">
-                <button id="editTaskBtn" class="px-4 py-2 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white">
-                    <i class="ph-fill ph-pencil mr-1"></i> Editar
-                </button>
-                <button id="deleteTaskBtn" class="px-4 py-2 border border-red-500 text-red-500 rounded-lg hover:bg-red-500 hover:text-white">
-                    <i class="ph-fill ph-trash mr-1"></i> Excluir
-                </button>
-            </div>
-        `;
-        
-        // Adicionar eventos aos botões
-        document.getElementById('editTaskBtn').addEventListener('click', () => {
-            editTask(task);
-        });
-        
-        document.getElementById('deleteTaskBtn').addEventListener('click', () => {
-            deleteTask(task.id);
-        });
+        // Mostrar notificação de sucesso
+        showNotification('Projeto criado com sucesso!', 'success');
         
     } catch (error) {
-        console.error('Erro ao carregar detalhes da tarefa:', error);
-        
-        // Exibir mensagem de erro no modal
-        document.getElementById('taskDetailsContent').innerHTML = `
-            <div class="text-center py-8 text-red-500">
-                <i class="ph-fill ph-warning text-4xl mb-2"></i>
-                <p>Erro ao carregar detalhes: ${error.message}</p>
-                <button id="retryLoadDetails" class="mt-4 bg-primary px-4 py-2 rounded-lg text-white hover:bg-purple-600">
-                    Tentar novamente
+        console.error('Erro ao criar projeto:', error);
+        showNotification('Erro ao criar projeto. Por favor, tente novamente.', 'error');
+    } finally {
+        // Restaurar botão de submissão
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.innerHTML = 'Criar Projeto';
+            submitBtn.disabled = false;
+        }
+    }
+}
+
+// Funções auxiliares para manipulação de modais
+function openModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('hidden');
+    }
+}
+
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+// Função para mostrar notificações
+function showNotification(message, type = 'info') {
+    // Remover notificações existentes
+    const existingNotifications = document.querySelectorAll('.notification');
+    existingNotifications.forEach(notification => {
+        notification.remove();
+    });
+    
+    // Criar elemento de notificação
+    const notification = document.createElement('div');
+    notification.className = `notification fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 transition-all transform translate-x-0`;
+    
+    // Definir cores com base no tipo
+    if (type === 'success') {
+        notification.classList.add('bg-green-600', 'text-white');
+    } else if (type === 'error') {
+        notification.classList.add('bg-red-600', 'text-white');
+    } else if (type === 'warning') {
+        notification.classList.add('bg-yellow-500', 'text-white');
+    } else {
+        notification.classList.add('bg-primary', 'text-white');
+    }
+    
+    // Adicionar conteúdo
+    notification.innerHTML = `
+        <div class="flex items-center">
+            <i class="ph ${getIconForType(type)} mr-2 text-xl"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    // Adicionar ao DOM
+    document.body.appendChild(notification);
+    
+    // Animar entrada
+    setTimeout(() => {
+        notification.classList.add('opacity-100');
+    }, 10);
+    
+    // Remover após alguns segundos
+    setTimeout(() => {
+        notification.classList.add('opacity-0');
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 3000);
+    
+    // Função auxiliar para obter ícone com base no tipo
+    function getIconForType(type) {
+        switch (type) {
+            case 'success': return 'ph-check-circle';
+            case 'error': return 'ph-x-circle';
+            case 'warning': return 'ph-warning-circle';
+            default: return 'ph-info';
+        }
+    }
+}
+
+// Função de debounce para limitar a frequência de execução
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Função para forçar a reinicialização dos dados (para desenvolvimento)
+function resetData() {
+    localStorage.removeItem('dataInitialized');
+    localStorage.removeItem('projects');
+    
+    // Recarregar a página para reinicializar os dados
+    window.location.reload();
+}
+
+// Expor função de reset para desenvolvimento
+window.resetBacklogData = resetData;
+
+// Função para confirmar exclusão de projeto
+function confirmDeleteProject(projectId) {
+    // Criar modal de confirmação
+    const confirmModal = document.createElement('div');
+    confirmModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+    confirmModal.id = 'confirmDeleteModal';
+    
+    confirmModal.innerHTML = `
+        <div class="bg-darkPanel border border-darkBorder rounded-lg w-full max-w-md p-6">
+            <h3 class="text-xl font-semibold mb-4">Confirmar Exclusão</h3>
+            <p class="mb-6">Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita.</p>
+            <div class="flex justify-end gap-3">
+                <button id="cancelDelete" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors">
+                    Cancelar
+                </button>
+                <button id="confirmDelete" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
+                    Excluir
                 </button>
             </div>
-        `;
-        
-        // Adicionar evento ao botão de tentar novamente
-        document.getElementById('retryLoadDetails')?.addEventListener('click', () => {
-            openTaskDetails(taskId);
-        });
-    }
+        </div>
+    `;
+    
+    // Adicionar ao DOM
+    document.body.appendChild(confirmModal);
+    
+    // Configurar event listeners
+    document.getElementById('cancelDelete').addEventListener('click', () => {
+        confirmModal.remove();
+    });
+    
+    document.getElementById('confirmDelete').addEventListener('click', async () => {
+        try {
+            // Mostrar indicador de carregamento
+            document.getElementById('confirmDelete').innerHTML = '<i class="ph ph-spinner ph-spin mr-1"></i> Excluindo...';
+            document.getElementById('confirmDelete').disabled = true;
+            
+            // Fazer requisição para a API
+            const response = await fetch(`/api/projects/${projectId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${auth.getToken()}`
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Falha ao excluir projeto');
+            }
+            
+            // Remover modal
+            confirmModal.remove();
+            
+            // Recarregar projetos
+            await loadProjects();
+            
+            // Mostrar notificação de sucesso
+            showNotification('Projeto excluído com sucesso!', 'success');
+            
+        } catch (error) {
+            console.error('Erro ao excluir projeto:', error);
+            showNotification('Erro ao excluir projeto. Por favor, tente novamente.', 'error');
+            
+            // Restaurar botão
+            document.getElementById('confirmDelete').innerHTML = 'Excluir';
+            document.getElementById('confirmDelete').disabled = false;
+        }
+    });
 }

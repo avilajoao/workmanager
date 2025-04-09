@@ -1,6 +1,7 @@
 // auth.js - Gerenciamento de autenticação
-
-const auth = (function() {
+window.auth = window.auth || (function() {
+    console.log('Inicializando módulo de autenticação');
+    
     // Verificar se o usuário está autenticado
     function isAuthenticated() {
         return localStorage.getItem('authToken') !== null;
@@ -19,47 +20,57 @@ const auth = (function() {
     
     // Fazer login
     function login(email, password) {
-        return fetch('/api/auth/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ email, password })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Credenciais inválidas');
-            }
-            return response.json();
-        })
-        .then(data => {
-            // Salvar token e dados do usuário
-            localStorage.setItem('authToken', data.token);
-            localStorage.setItem('currentUser', JSON.stringify(data.user));
-            
-            // Redirecionar para a página principal
-            window.location.href = 'home.html';
-            
-            return { success: true };
-        })
-        .catch(error => {
-            console.error('Erro de login:', error);
-            return { 
-                success: false, 
-                message: error.message || 'Falha ao fazer login. Verifique suas credenciais.'
-            };
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                // Verificar credenciais (simulado)
+                if (email === 'admin@constructflow.com' && password === 'senha123') {
+                    const user = {
+                        id: 1,
+                        name: 'Carlos Oliveira',
+                        role: 'Gerente de Projetos',
+                        email: email
+                    };
+                    
+                    localStorage.setItem('authToken', 'token-simulado-123456');
+                    localStorage.setItem('currentUser', JSON.stringify(user));
+                    
+                    console.log('Login realizado com sucesso', user);
+                    resolve({ success: true, user });
+                } else {
+                    console.warn('Tentativa de login com credenciais inválidas');
+                    reject(new Error('Credenciais inválidas'));
+                }
+            }, 500);
         });
     }
     
     // Fazer logout
     function logout() {
-        // Limpar dados de autenticação
         localStorage.removeItem('authToken');
         localStorage.removeItem('currentUser');
         
-        // Redirecionar para a página de login
+        console.log('Logout realizado com sucesso');
         window.location.href = 'login.html';
     }
+    
+    // Criar usuário profissional para desenvolvimento
+    (function createProfessionalUser() {
+        if (!localStorage.getItem('authToken') || !localStorage.getItem('currentUser')) {
+            console.log('Criando usuário profissional para desenvolvimento');
+            
+            const professionalUser = {
+                id: 1,
+                name: 'Carlos Oliveira',
+                role: 'Gerente de Projetos',
+                email: 'admin@constructflow.com'
+            };
+            
+            localStorage.setItem('authToken', 'token-simulado-123456');
+            localStorage.setItem('currentUser', JSON.stringify(professionalUser));
+        }
+    })();
+    
+    console.log('Módulo de autenticação inicializado com sucesso');
     
     // API pública
     return {
@@ -70,20 +81,3 @@ const auth = (function() {
         logout
     };
 })();
-
-document.getElementById('loginForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    
-    auth.login(email, password).then(result => {
-        if (!result.success) {
-            // Exibir mensagem de erro
-            const errorElement = document.getElementById('loginError');
-            errorElement.textContent = result.message;
-            errorElement.classList.remove('hidden');
-        }
-        // Não precisamos redirecionar aqui, pois a função auth.login já faz isso
-    });
-});
