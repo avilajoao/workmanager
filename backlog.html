@@ -7,25 +7,6 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
     <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
-    <style>
-        .sortable-ghost {
-            opacity: 0.5;
-            background-color: #4a5568 !important;
-            border: 2px dashed #805ad5 !important;
-        }
-
-        .sortable-drag {
-            cursor: grabbing;
-        }
-
-        .drag-handle {
-            cursor: grab;
-        }
-
-        .drag-handle:active {
-            cursor: grabbing;
-        }
-    </style>
 </head>
 <body class="bg-darkBg text-white">
     <!-- Barra lateral -->
@@ -69,6 +50,10 @@
                 <i class="ph ph-gear text-xl"></i>
                 <span class="ml-3 hidden">Configurações</span>
             </a>
+            <button id="logoutButton" class="sidebar-item text-grayText hover:bg-gray-800 hover:text-white w-full text-left">
+                <i class="ph ph-sign-out text-xl"></i>
+                <span class="ml-3 hidden">Sair</span>
+            </button>
         </div>
     </div>
     
@@ -82,6 +67,10 @@
             </div>
             
             <div class="flex items-center space-x-4">
+                <button id="toggleDarkMode" class="text-grayText hover:text-white">
+                    <i class="ph ph-moon"></i>
+                </button>
+                
                 <div class="relative">
                     <button class="text-grayText hover:text-white">
                         <i class="ph ph-bell text-xl"></i>
@@ -126,6 +115,11 @@
                     </div>
                 </div>
                 
+                <button id="exportProjectsBtn" class="bg-gray-600 hover:bg-gray-700 rounded-lg px-4 py-2 flex items-center transition-colors">
+                    <i class="ph ph-download mr-2"></i>
+                    <span class="hidden sm:inline">Exportar</span>
+                </button>
+                
                 <button id="newProjectBtn" class="bg-primary hover:bg-purple-700 rounded-lg px-4 py-2 flex items-center transition-colors">
                     <i class="ph ph-plus mr-2"></i>
                     <span>Novo Projeto</span>
@@ -134,8 +128,8 @@
         </div>
         
         <!-- Lista de projetos -->
-        <div id="projectsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Os cards de projetos serão inseridos aqui via JavaScript -->
+        <div id="projectsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Os cards de projetos serão inseridos aqui -->
         </div>
     </div>
     
@@ -205,13 +199,84 @@
         </div>
     </div>
     
+    <!-- Estilos adicionais -->
+    <style>
+        /* Estilos para drag and drop */
+        .sortable-ghost {
+            opacity: 0.5;
+            background-color: #4a5568 !important;
+            border: 2px dashed #805ad5 !important;
+        }
+        
+        .sortable-drag {
+            cursor: grabbing;
+        }
+        
+        .drag-handle {
+            cursor: grab;
+        }
+        
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+        
+        /* Estilos para notificações */
+        .notification {
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        
+        /* Estilos para status */
+        .status-planning {
+            background-color: rgba(66, 153, 225, 0.2);
+            border-color: #4299e1;
+            color: #4299e1;
+        }
+        
+        .status-in-progress {
+            background-color: rgba(128, 90, 213, 0.2);
+            border-color: #805ad5;
+            color: #805ad5;
+        }
+        
+        .status-on-hold {
+            background-color: rgba(237, 137, 54, 0.2);
+            border-color: #ed8936;
+            color: #ed8936;
+        }
+        
+        .status-completed {
+            background-color: rgba(72, 187, 120, 0.2);
+            border-color: #48bb78;
+            color: #48bb78;
+        }
+        
+        .status-cancelled {
+            background-color: rgba(229, 62, 62, 0.2);
+            border-color: #e53e3e;
+            color: #e53e3e;
+        }
+    </style>
+    
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="init-data.js"></script>
     <script src="api-mock.js"></script>
     <script src="auth.js"></script>
     <script src="theme.js"></script>
     <script src="sidebar.js"></script>
+    <!-- Adicionar Sortable.js para drag and drop -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="backlog.js"></script>
+    
+    <!-- Inicializar a página -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          if (typeof initPage === 'function') {
+            initPage();
+          } else {
+            console.error('A função initPage não está definida');
+          }
+        });
+    </script>
 </body>
 </html>

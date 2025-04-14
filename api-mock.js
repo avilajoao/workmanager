@@ -1,190 +1,471 @@
 // api-mock.js - Simulação de API para desenvolvimento
-(function() {
-    console.log('Inicializando API mock');
+
+// Interceptar requisições fetch
+const originalFetch = window.fetch;
+window.fetch = function(url, options = {}) {
+    console.log(`[API Mock] Requisição para: ${url}`, options);
     
-    // Interceptar chamadas fetch
-    const originalFetch = window.fetch;
-    
-    window.fetch = function(url, options = {}) {
-        console.log(`API Mock: Interceptando chamada para ${url}`, options);
-        
-        // Verificar se é uma chamada para nossa API
-        if (typeof url === 'string' && url.startsWith('/api/')) {
-            return handleApiRequest(url, options);
-        }
-        
-        // Caso contrário, usar o fetch original
-        return originalFetch(url, options);
-    };
-    
-    // Manipular requisições para a API
-    async function handleApiRequest(url, options) {
-        // Simular latência de rede
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        console.log(`API Mock: Processando requisição para ${url}`);
-        
-        // Rotas da API
-        if (url === '/api/projects' && (!options.method || options.method === 'GET')) {
-            return getProjects();
-        } else if (url === '/api/projects' && options.method === 'POST') {
-            return createProject(options.body);
-        } else if (url.match(/\/api\/projects\/\d+$/) && (!options.method || options.method === 'GET')) {
-            const id = parseInt(url.split('/').pop());
-            return getProjectById(id);
-        } else if (url.match(/\/api\/projects\/\d+$/) && options.method === 'PUT') {
-            const id = parseInt(url.split('/').pop());
-            return updateProject(id, options.body);
-        } else if (url.match(/\/api\/projects\/\d+$/) && options.method === 'DELETE') {
-            const id = parseInt(url.split('/').pop());
-            return deleteProject(id);
-        }
-        
-        // Rota não encontrada
-        console.warn(`API Mock: Rota não encontrada - ${url}`);
-        return createResponse(404, { error: 'Rota não encontrada' });
+    // Verificar se é uma requisição para nossa API
+    if (url.startsWith('/api/')) {
+        return handleMockRequest(url, options);
     }
     
-    // Criar resposta simulada
-    function createResponse(status, data) {
-        console.log(`API Mock: Retornando resposta com status ${status}`, data);
-        return Promise.resolve({
-            ok: status >= 200 && status < 300,
-            status,
-            json: () => Promise.resolve(data)
+    // Caso contrário, usar o fetch original
+    return originalFetch(url, options);
+};
+
+// Função para verificar autenticação
+function checkAuth() {
+  if (!auth || typeof auth.isAuthenticated !== 'function') {
+    console.error('Objeto auth não está definido ou não tem o método isAuthenticated');
+    return false;
+  }
+  
+  if (!auth.isAuthenticated()) {
+    console.log('Usuário não autenticado, redirecionando para login');
+    window.location.href = 'login.html';
+    return false;
+  }
+  return true;
+}
+
+// Função principal para lidar com requisições mock
+function handleMockRequest(url, options = {}) {
+    // Verificar autenticação para endpoints protegidos
+    if (url !== '/api/auth/login' && !checkAuth(options)) {
+        return new Promise(resolve => {
+            setTimeout(() => {
+                resolve(new Response(JSON.stringify({ 
+                    error: 'Não autorizado',
+                    message: 'Você precisa estar autenticado para acessar este recurso'
+                }), {
+                    status: 401,
+                    headers: { 'Content-Type': 'application/json' }
+                }));
+            }, 300);
         });
     }
     
-    // Obter projetos
-    function getProjects() {
-        try {
-            const projects = JSON.parse(localStorage.getItem('projects')) || [];
-            console.log('API Mock: Retornando projetos', projects);
-            return createResponse(200, projects);
-        } catch (error) {
-            console.error('API Mock: Erro ao obter projetos', error);
-            return createResponse(500, { error: 'Erro interno do servidor' });
-        }
+    // Simular delay de rede
+    return new Promise(resolve => {
+        setTimeout(() => {
+            // Verificar tipo de requisição
+            if (url.startsWith('/api/projects')) {
+                resolve(handleProjectsRequest(url, options));
+            } else if (url === '/api/metrics') {
+                resolve(handleMetricsRequest(options));
+            } else if (url === '/api/auth/login') {
+                resolve(handleLoginRequest(options));
+            } else if (url === '/api/auth/logout') {
+                resolve(handleLogoutRequest(options));
+            } else {
+                // Requisição não suportada
+                resolve(new Response(JSON.stringify({ 
+                    error: 'API não suportada',
+                    message: 'O endpoint solicitado não existe'
+                }), {
+                    status: 404,
+                    headers: { 'Content-Type': 'application/json' }
+                }));
+            }
+        }, 300); // Delay de 300ms para simular rede
+    });
+}
+
+// Função para lidar com requisições de projetos
+function handleProjectsRequest(url, options) {
+    // Obter projetos do localStorage
+    const projectsString = localStorage.getItem('mockProjects');
+    let projects = [];
+    
+    try {
+        projects = projectsString ? JSON.parse(projectsString) : [];
+    } catch (error) {
+        console.error('Erro ao analisar projetos do localStorage:', error);
+        // Se houver erro ao analisar, inicializar com array vazio
+        localStorage.setItem('mockProjects', JSON.stringify([]));
     }
     
-    // Obter projeto por ID
-    function getProjectById(id) {
-        try {
-            const projects = JSON.parse(localStorage.getItem('projects')) || [];
-            const project = projects.find(p => p.id === id);
+    // Verificar se é uma requisição para um projeto específico
+    const projectIdMatch = url.match(/\/api\/projects\/([^\/]+)$/);
+    
+    if (projectIdMatch) {
+        const projectId = projectIdMatch[1];
+        
+        // Buscar projeto por ID
+        if (!options.method || options.method === 'GET') {  // Modificar para aceitar requisições sem método
+            console.log(`[API Mock] Buscando projeto com ID: ${projectId}`);
+            const project = projects.find(p => p.id === projectId);
             
             if (!project) {
-                console.warn(`API Mock: Projeto com ID ${id} não encontrado`);
-                return createResponse(404, { error: 'Projeto não encontrado' });
+                console.log(`[API Mock] Projeto não encontrado: ${projectId}`);
+                return new Response(JSON.stringify({ 
+                    error: 'Projeto não encontrado',
+                    message: 'O projeto solicitado não existe'
+                }), {
+                    status: 404,
+                    headers: { 'Content-Type': 'application/json' }
+                });
             }
             
-            console.log(`API Mock: Retornando projeto com ID ${id}`, project);
-            return createResponse(200, project);
-        } catch (error) {
-            console.error(`API Mock: Erro ao obter projeto com ID ${id}`, error);
-            return createResponse(500, { error: 'Erro interno do servidor' });
+            console.log(`[API Mock] Projeto encontrado:`, project);
+            return new Response(JSON.stringify(project), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
-    }
-    
-    // Criar projeto
-    function createProject(body) {
-        try {
-            const projectData = typeof body === 'string' ? JSON.parse(body) : body;
-            const projects = JSON.parse(localStorage.getItem('projects')) || [];
+        
+        // Atualizar projeto
+        if (options.method === 'PUT') {
+            let projectData;
             
-            // Gerar ID (maior ID + 1)
-            const maxId = projects.length > 0 ? Math.max(...projects.map(p => p.id)) : 0;
-            const newId = maxId + 1;
+            try {
+                projectData = JSON.parse(options.body);
+            } catch (error) {
+                return new Response(JSON.stringify({ 
+                    error: 'Dados inválidos',
+                    message: 'Os dados enviados não são um JSON válido'
+                }), {
+                    status: 400,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
             
-            // Criar novo projeto
-            const newProject = {
-                id: newId,
+            const projectIndex = projects.findIndex(p => p.id === projectId);
+            
+            if (projectIndex === -1) {
+                return new Response(JSON.stringify({ 
+                    error: 'Projeto não encontrado',
+                    message: 'O projeto que você está tentando atualizar não existe'
+                }), {
+                    status: 404,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
+            
+            // Atualizar dados do projeto
+            projects[projectIndex] = {
+                ...projects[projectIndex],
                 ...projectData,
-                createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
             };
             
-            // Adicionar à lista
-            projects.push(newProject);
-            localStorage.setItem('projects', JSON.stringify(projects));
+            // Salvar no localStorage
+            localStorage.setItem('mockProjects', JSON.stringify(projects));
             
-            console.log('API Mock: Projeto criado com sucesso', newProject);
-            return createResponse(201, newProject);
-        } catch (error) {
-            console.error('API Mock: Erro ao criar projeto', error);
-            return createResponse(500, { error: 'Erro interno do servidor' });
+            return new Response(JSON.stringify(projects[projectIndex]), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
-    }
-    
-    // Atualizar projeto
-    function updateProject(id, body) {
-        try {
-            const projectData = typeof body === 'string' ? JSON.parse(body) : body;
-            const projects = JSON.parse(localStorage.getItem('projects')) || [];
+        
+        // Excluir projeto
+        if (options.method === 'DELETE') {
+            const projectIndex = projects.findIndex(p => p.id === projectId);
             
-            // Encontrar índice do projeto
-            const index = projects.findIndex(p => p.id === id);
-            
-            if (index === -1) {
-                console.warn(`API Mock: Projeto com ID ${id} não encontrado para atualização`);
-                return createResponse(404, { error: 'Projeto não encontrado' });
-            }
-            
-            // Atualizar projeto
-            const updatedProject = {
-                ...projects[index],
-                ...projectData,
-                id, // Garantir que o ID não mude
-                updatedAt: new Date().toISOString()
-            };
-            
-            projects[index] = updatedProject;
-            localStorage.setItem('projects', JSON.stringify(projects));
-            
-            console.log(`API Mock: Projeto com ID ${id} atualizado com sucesso`, updatedProject);
-            return createResponse(200, updatedProject);
-        } catch (error) {
-            console.error(`API Mock: Erro ao atualizar projeto com ID ${id}`, error);
-            return createResponse(500, { error: 'Erro interno do servidor' });
-        }
-    }
-    
-    // Excluir projeto
-    function deleteProject(id) {
-        try {
-            const projects = JSON.parse(localStorage.getItem('projects')) || [];
-            
-            // Encontrar índice do projeto
-            const index = projects.findIndex(p => p.id === id);
-            
-            if (index === -1) {
-                console.warn(`API Mock: Projeto com ID ${id} não encontrado para exclusão`);
-                return createResponse(404, { error: 'Projeto não encontrado' });
+            if (projectIndex === -1) {
+                return new Response(JSON.stringify({ 
+                    error: 'Projeto não encontrado',
+                    message: 'O projeto que você está tentando excluir não existe'
+                }), {
+                    status: 404,
+                    headers: { 'Content-Type': 'application/json' }
+                });
             }
             
             // Remover projeto
-            projects.splice(index, 1);
-            localStorage.setItem('projects', JSON.stringify(projects));
+            projects.splice(projectIndex, 1);
             
-            console.log(`API Mock: Projeto com ID ${id} excluído com sucesso`);
-            return createResponse(204, null);
-        } catch (error) {
-            console.error(`API Mock: Erro ao excluir projeto com ID ${id}`, error);
-            return createResponse(500, { error: 'Erro interno do servidor' });
+            // Salvar no localStorage
+            localStorage.setItem('mockProjects', JSON.stringify(projects));
+            
+            return new Response(JSON.stringify({ 
+                success: true,
+                message: 'Projeto excluído com sucesso'
+            }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+            });
         }
     }
     
-    // Forçar reinicialização dos dados para desenvolvimento
-    function resetData() {
-        localStorage.removeItem('dataInitialized');
-        localStorage.removeItem('projects');
-        
-        // Recarregar a página para reinicializar os dados
-        window.location.reload();
+    // Listar todos os projetos
+    if (url === '/api/projects' && (!options.method || options.method === 'GET')) {
+        return new Response(JSON.stringify(projects), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+        });
     }
     
-    // Expor função de reset para desenvolvimento
-    window.resetApiData = resetData;
+    // Criar novo projeto
+    if (url === '/api/projects' && options.method === 'POST') {
+        let projectData;
+        
+        try {
+            projectData = JSON.parse(options.body);
+        } catch (error) {
+            return new Response(JSON.stringify({ 
+                error: 'Dados inválidos',
+                message: 'Os dados enviados não são um JSON válido'
+            }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+        
+        // Validar dados mínimos
+        if (!projectData.name || !projectData.status) {
+            return new Response(JSON.stringify({ 
+                error: 'Dados incompletos',
+                message: 'Nome e status são campos obrigatórios'
+            }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+        
+        // Gerar ID único
+        const newId = Date.now().toString();
+        
+        // Criar novo projeto
+        const newProject = {
+            id: newId,
+            ...projectData,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        
+        // Adicionar à lista
+        projects.push(newProject);
+        
+        // Salvar no localStorage
+        localStorage.setItem('mockProjects', JSON.stringify(projects));
+        
+        return new Response(JSON.stringify(newProject), {
+            status: 201,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
     
-    console.log('API mock inicializada com sucesso');
-})();
+    // Método não suportado
+    return new Response(JSON.stringify({ 
+        error: 'Método não suportado',
+        message: `O método ${options.method} não é suportado para este endpoint`
+    }), {
+        status: 405,
+        headers: { 'Content-Type': 'application/json' }
+    });
+}
+
+// Função para lidar com requisições de métricas
+function handleMetricsRequest(options) {
+    // Implementar conforme necessário para o dashboard
+    const metrics = {
+        projectsCount: 0,
+        completedProjects: 0,
+        inProgressProjects: 0,
+        totalBudget: 0,
+        // Adicionar outras métricas conforme necessário
+    };
+    
+    // Calcular métricas com base nos projetos
+    try {
+        const projectsString = localStorage.getItem('mockProjects');
+        const projects = projectsString ? JSON.parse(projectsString) : [];
+        
+        metrics.projectsCount = projects.length;
+        metrics.completedProjects = projects.filter(p => p.status === 'completed').length;
+        metrics.inProgressProjects = projects.filter(p => p.status === 'in-progress').length;
+        metrics.totalBudget = projects.reduce((sum, p) => sum + (p.budget || 0), 0);
+    } catch (error) {
+        console.error('Erro ao calcular métricas:', error);
+    }
+    
+    return new Response(JSON.stringify(metrics), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+    });
+}
+
+// Função para lidar com requisições de login
+function handleLoginRequest(options) {
+    try {
+        const credentials = JSON.parse(options.body);
+        
+        // Verificar credenciais (simplificado para desenvolvimento)
+        if (credentials.email && credentials.password) {
+            // Usuário de exemplo
+            const user = {
+                id: '1',
+                name: 'Carlos Oliveira',
+                email: credentials.email,
+                role: 'Gerente de Projetos'
+            };
+            
+            // Token de exemplo (não use isso em produção!)
+            const token = 'mock-jwt-token-' + Date.now();
+            
+            // Salvar usuário e token no localStorage
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            localStorage.setItem('authToken', token);
+            
+            return new Response(JSON.stringify({ 
+                user,
+                token,
+                message: 'Login realizado com sucesso'
+            }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        } else {
+            return new Response(JSON.stringify({ 
+                error: 'Credenciais inválidas',
+                message: 'Email ou senha incorretos'
+            }), {
+                status: 401,
+                headers: { 'Content-Type': 'application/json' }
+            });
+        }
+    } catch (error) {
+        return new Response(JSON.stringify({ 
+            error: 'Erro no servidor',
+            message: 'Ocorreu um erro ao processar a requisição'
+        }), {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+        });
+    }
+}
+
+// Função para lidar com requisições de logout
+function handleLogoutRequest(options) {
+    // Remover dados de autenticação
+    localStorage.removeItem('currentUser');
+    localStorage.removeItem('authToken');
+    
+    return new Response(JSON.stringify({ 
+        success: true,
+        message: 'Logout realizado com sucesso'
+    }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+    });
+}
+
+// Inicializar dados de exemplo se não existirem
+function initMockData() {
+    // Verificar se já existem projetos
+    if (!localStorage.getItem('mockProjects')) {
+        // Projetos de exemplo
+        const exampleProjects = [
+            {
+                id: '1',
+                name: 'Construção de Edifício Residencial',
+                description: 'Projeto de construção de um edifício residencial com 12 andares e 48 apartamentos.',
+                status: 'in-progress',
+                startDate: '2023-01-15',
+                endDate: '2024-06-30',
+                budget: 4500000,
+                createdAt: '2023-01-10T10:00:00Z',
+                updatedAt: '2023-01-10T10:00:00Z'
+            },
+            {
+                id: '2',
+                name: 'Reforma de Escritório Corporativo',
+                description: 'Reforma completa de um escritório de 500m² no centro empresarial.',
+                status: 'planning',
+                startDate: '2023-03-01',
+                endDate: '2023-05-15',
+                budget: 350000,
+                createdAt: '2023-02-20T14:30:00Z',
+                updatedAt: '2023-02-20T14:30:00Z'
+            },
+            {
+                id: '3',
+                name: 'Construção de Ponte Municipal',
+                description: 'Projeto de engenharia para construção de uma ponte sobre o Rio Verde.',
+                status: 'on-hold',
+                startDate: '2023-06-10',
+                endDate: '2024-12-20',
+                budget: 12000000,
+                createdAt: '2023-01-05T09:15:00Z',
+                updatedAt: '2023-01-05T09:15:00Z'
+            }
+        ];
+        
+        localStorage.setItem('mockProjects', JSON.stringify(exampleProjects));
+        console.log('[API Mock] Dados de exemplo inicializados');
+    }
+}
+
+// Função para resetar os dados mock
+function resetMockData() {
+    console.log('[API Mock] Resetando dados de exemplo...');
+    
+    // Projetos de exemplo
+    const exampleProjects = [
+        {
+            id: '1',
+            name: 'Construção de Edifício Residencial',
+            description: 'Projeto de construção de um edifício residencial com 12 andares e 48 apartamentos.',
+            status: 'in-progress',
+            startDate: '2023-01-15',
+            endDate: '2024-06-30',
+            budget: 4500000,
+            createdAt: '2023-01-10T10:00:00Z',
+            updatedAt: '2023-01-10T10:00:00Z'
+        },
+        {
+            id: '2',
+            name: 'Reforma de Escritório Corporativo',
+            description: 'Reforma completa de um escritório de 500m² no centro empresarial.',
+            status: 'planning',
+            startDate: '2023-03-01',
+            endDate: '2023-05-15',
+            budget: 350000,
+            createdAt: '2023-02-20T14:30:00Z',
+            updatedAt: '2023-02-20T14:30:00Z'
+        },
+        {
+            id: '3',
+            name: 'Construção de Ponte Municipal',
+            description: 'Projeto de engenharia para construção de uma ponte sobre o Rio Verde.',
+            status: 'on-hold',
+            startDate: '2023-06-10',
+            endDate: '2024-12-20',
+            budget: 12000000,
+            createdAt: '2023-01-05T09:15:00Z',
+            updatedAt: '2023-01-05T09:15:00Z'
+        }
+    ];
+    
+    // Salvar no localStorage
+    localStorage.setItem('mockProjects', JSON.stringify(exampleProjects));
+    
+    console.log('[API Mock] Dados resetados com sucesso');
+    return exampleProjects;
+}
+
+// Expor a função globalmente para poder chamá-la do console
+window.resetMockData = resetMockData;
+
+// Inicializar ou resetar dados mock
+resetMockData();
+console.log('[API Mock] API mock inicializada com dados resetados');
+// Adicione este código ao final do api-mock.js para verificar se os dados estão sendo inicializados
+console.log('[API Mock] Verificando dados de exemplo:');
+console.log(JSON.parse(localStorage.getItem('mockProjects') || '[]'));
+
+// Substituir ou adicionar ao final do backlog.js
+window.addEventListener('pageshow', (event) => {
+    console.log('Evento pageshow disparado, bfcache:', event.persisted);
+    
+    // Verificar autenticação
+    if (!checkAuth()) return;
+    
+    // Aplicar tema
+    applyTheme();
+    
+    // Inicializar a página
+    initPage();
+});

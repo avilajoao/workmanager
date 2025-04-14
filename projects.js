@@ -1,11 +1,18 @@
-// Carregar projetos quando a página for carregada
+/**
+ * Inicializa a página de projetos
+ * @listens DOMContentLoaded
+ * @returns {void}
+ */
 document.addEventListener('DOMContentLoaded', () => {
     loadProjects();
     updateCurrentDate();
     setupEventListeners();
 });
 
-// Configurar event listeners
+/**
+ * Configura os event listeners para interações na página
+ * @returns {void}
+ */
 function setupEventListeners() {
     // Toggle da barra lateral
     document.getElementById('toggleSidebar').addEventListener('click', () => {
@@ -29,7 +36,12 @@ function setupEventListeners() {
     document.getElementById('filterStatus').addEventListener('change', filterProjects);
 }
 
-// Carregar projetos da API
+/**
+ * Carrega projetos da API e exibe na tabela
+ * @async
+ * @returns {Promise<void>}
+ * @throws {Error} Se falhar ao carregar projetos
+ */
 async function loadProjects() {
     const tableBody = document.getElementById('projectsTableBody');
     const loading = document.getElementById('loadingProjects');
@@ -61,7 +73,11 @@ async function loadProjects() {
     }
 }
 
-// Renderizar projetos na tabela
+/**
+ * Renderiza a lista de projetos na tabela HTML
+ * @param {Array<Object>} projects - Lista de projetos
+ * @returns {void}
+ */
 function renderProjects(projects) {
     const tableBody = document.getElementById('projectsTableBody');
     tableBody.innerHTML = '';
@@ -161,7 +177,10 @@ function renderProjects(projects) {
     });
 }
 
-// Filtrar projetos
+/**
+ * Filtra projetos com base nos critérios de busca
+ * @returns {void}
+ */
 function filterProjects() {
     const searchTerm = document.getElementById('searchProjects').value.toLowerCase();
     const statusFilter = document.getElementById('filterStatus').value;
@@ -194,7 +213,11 @@ function filterProjects() {
     }
 }
 
-// Abrir modal para adicionar/editar projeto
+/**
+ * Abre o modal para adicionar ou editar um projeto
+ * @param {string|null} projectId - ID do projeto para edição ou null para novo
+ * @returns {Promise<void>}
+ */
 async function openProjectModal(projectId = null) {
     const modal = document.getElementById('projectModal');
     const modalTitle = document.getElementById('modalTitle');
@@ -248,28 +271,104 @@ async function openProjectModal(projectId = null) {
     modal.classList.remove('hidden');
 }
 
-// Fechar modal
+/**
+ * Fecha o modal de projeto
+ * @returns {void}
+ */
 function closeProjectModal() {
     document.getElementById('projectModal').classList.add('hidden');
 }
 
-// Manipular envio do formulário de projeto
+// Validação de campos do formulário
+function validateProjectForm() {
+    let isValid = true;
+    
+    // Limpar erros anteriores
+    document.querySelectorAll('.error-message').forEach(el => el.remove());
+    document.querySelectorAll('.input-error').forEach(el => el.classList.remove('input-error'));
+    
+    // Validar campos obrigatórios
+    const requiredFields = [
+        { id: 'projectName', name: 'Nome do Projeto' },
+        { id: 'clientName', name: 'Nome do Cliente' },
+        { id: 'projectDeadline', name: 'Prazo' }
+    ];
+    
+    requiredFields.forEach(field => {
+        const input = document.getElementById(field.id);
+        if (!input.value.trim()) {
+            showFieldError(input, `${field.name} é obrigatório`);
+            isValid = false;
+        }
+    });
+    
+    // Validar progresso (0-100)
+    const progress = document.getElementById('projectProgress');
+    if (progress.value < 0 || progress.value > 100) {
+        showFieldError(progress, 'Progresso deve ser entre 0 e 100');
+        isValid = false;
+    }
+    
+    // Validar data (não pode ser no passado)
+    const deadline = document.getElementById('projectDeadline');
+    if (deadline.value && new Date(deadline.value) < new Date()) {
+        showFieldError(deadline, 'Prazo não pode ser no passado');
+        isValid = false;
+    }
+    
+    return isValid;
+}
+
+// Mostrar erro de campo
+function showFieldError(input, message) {
+    input.classList.add('input-error');
+    const error = document.createElement('div');
+    error.className = 'error-message text-red-500 text-xs mt-1';
+    error.textContent = message;
+    input.parentNode.appendChild(error);
+}
+
+/**
+ * Manipula o envio do formulário de projeto
+ * @async
+ * @param {Event} event - Evento de submit do formulário
+ * @returns {Promise<void>}
+ */
 async function handleProjectSubmit(event) {
     event.preventDefault();
+    
+    // Validar formulário antes de enviar
+    if (!validateProjectForm()) {
+        return;
+    }
     
     const projectId = document.getElementById('projectId').value;
     const isEditing = projectId !== '';
     
+    // Mostrar estado de carregamento
+    const submitBtn = document.getElementById('submitProject');
+    const originalBtnText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `
+        <span class="inline-flex items-center">
+            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Processando...
+        </span>
+    `;
+    
     // Coletar dados do formulário
     const projectData = {
-        name: document.getElementById('projectName').value,
-        client: document.getElementById('clientName').value,
+        name: document.getElementById('projectName').value.trim(),
+        client: document.getElementById('clientName').value.trim(),
         type: document.getElementById('projectType').value,
         status: document.getElementById('projectStatus').value,
         progress: parseInt(document.getElementById('projectProgress').value),
         deadline: document.getElementById('projectDeadline').value,
-        description: document.getElementById('projectDescription').value,
-        budget: parseFloat(document.getElementById('projectBudget').value)
+        description: document.getElementById('projectDescription').value.trim(),
+        budget: parseFloat(document.getElementById('projectBudget').value) || 0
     };
     
     try {
@@ -300,17 +399,30 @@ async function handleProjectSubmit(event) {
     } catch (error) {
         console.error(`Erro ao ${isEditing ? 'atualizar' : 'criar'} projeto:`, error);
         showNotification(`Erro ao ${isEditing ? 'atualizar' : 'criar'} projeto`, 'error');
+    } finally {
+        // Restaurar botão
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
     }
 }
 
-// Confirmar exclusão de projeto
+/**
+ * Solicita confirmação antes de excluir um projeto
+ * @param {string} projectId - ID do projeto a ser excluído
+ * @returns {void}
+ */
 function confirmDeleteProject(projectId) {
     if (confirm('Tem certeza que deseja excluir este projeto? Esta ação não pode ser desfeita.')) {
         deleteProject(projectId);
     }
 }
 
-// Excluir projeto
+/**
+ * Exclui um projeto via API
+ * @async
+ * @param {string} projectId - ID do projeto a ser excluído
+ * @returns {Promise<void>}
+ */
 async function deleteProject(projectId) {
     try {
         const response = await fetch(`/api/projects/${projectId}`, {
@@ -330,13 +442,20 @@ async function deleteProject(projectId) {
     }
 }
 
-// Formatar data para o input date
+/**
+ * Formata uma data string para o formato de input date (YYYY-MM-DD)
+ * @param {string} dateString - Data em formato string
+ * @returns {string} Data formatada
+ */
 function formatDateForInput(dateString) {
     const date = new Date(dateString);
     return date.toISOString().split('T')[0];
 }
 
-// Atualizar a data atual
+/**
+ * Atualiza o elemento com a data atual formatada
+ * @returns {void}
+ */
 function updateCurrentDate() {
     const dateElement = document.getElementById('current-date');
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -351,7 +470,12 @@ function updateCurrentDate() {
     dateElement.textContent = capitalizedDate;
 }
 
-// Mostrar notificação
+/**
+ * Exibe uma notificação temporária na tela
+ * @param {string} message - Mensagem a ser exibida
+ * @param {'info'|'success'|'error'} [type='info'] - Tipo de notificação
+ * @returns {void}
+ */
 function showNotification(message, type = 'info') {
     // Criar elemento de notificação
     const notification = document.createElement('div');
