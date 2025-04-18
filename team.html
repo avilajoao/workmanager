@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equipe - ConstructFlow</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+</head>
+<body class="bg-darkBg text-white">
+    <!-- Barra lateral -->
+    <div class="sidebar fixed left-0 top-0 h-full bg-darkPanel border-r border-darkBorder p-4 flex flex-col z-10">
+        <!-- Logo -->
+        <div class="flex items-center justify-center mb-8">
+            <span class="text-2xl font-bold text-primary">CF</span>
+        </div>
+        
+        <!-- Itens do menu -->
+        <div class="flex-1 space-y-2">
+            <a href="index.html" class="sidebar-item text-grayText hover:bg-gray-800 hover:text-white">
+                <i class="ph ph-house text-xl"></i>
+                <span class="ml-3 hidden">Dashboard</span>
+            </a>
+            <a href="backlog.html" class="sidebar-item text-grayText hover:bg-gray-800 hover:text-white">
+                <i class="ph ph-list-checks text-xl"></i>
+                <span class="ml-3 hidden">Backlog</span>
+            </a>
+            <a href="calendar.html" class="sidebar-item text-grayText hover:bg-gray-800 hover:text-white">
+                <i class="ph ph-calendar text-xl"></i>
+                <span class="ml-3 hidden">Calendário</span>
+            </a>
+            <a href="tasks.html" class="sidebar-item text-grayText hover:bg-gray-800 hover:text-white">
+                <i class="ph ph-check-square text-xl"></i>
+                <span class="ml-3 hidden">Tarefas</span>
+            </a>
+            <a href="team.html" class="sidebar-item bg-gray-800 text-white">
+                <i class="ph ph-users text-xl"></i>
+                <span class="ml-3 hidden">Equipe</span>
+            </a>
+            <a href="reports.html" class="sidebar-item text-grayText hover:bg-gray-800 hover:text-white">
+                <i class="ph ph-chart-line text-xl"></i>
+                <span class="ml-3 hidden">Relatórios</span>
+            </a>
+        </div>
+        
+        <!-- Configurações -->
+        <div>
+            <a href="settings.html" class="sidebar-item text-grayText hover:bg-gray-800 hover:text-white">
+                <i class="ph ph-gear text-xl"></i>
+                <span class="ml-3 hidden">Configurações</span>
+            </a>
+            <button id="logoutButton" class="sidebar-item text-grayText hover:bg-gray-800 hover:text-white w-full text-left">
+                <i class="ph ph-sign-out text-xl"></i>
+                <span class="ml-3 hidden">Sair</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Conteúdo principal -->
+    <div class="ml-16 p-6">
+        <!-- Cabeçalho -->
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-2xl font-bold">Equipe</h1>
+                <p id="current-date" class="text-grayText">Segunda-feira, 1 de janeiro de 2023</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="toggleDarkMode" class="text-grayText hover:text-white">
+                    <i class="ph ph-moon"></i>
+                </button>
+                <div class="relative">
+                    <button class="text-grayText hover:text-white">
+                        <i class="ph ph-bell text-xl"></i>
+                    </button>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center mr-2">
+                        <span id="userInitials">CO</span>
+                    </div>
+                    <div class="hidden md:block">
+                        <span id="userName" class="block font-medium">Carlos Oliveira</span>
+                        <span id="userRole" class="text-sm text-grayText">Gerente de Projetos</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <!-- Filtros e controles -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+                <div class="relative flex-grow">
+                    <input type="text" id="searchMembers" placeholder="Buscar membros..." class="bg-darkPanel border border-darkBorder rounded-lg px-4 py-2 pl-10 w-full focus:outline-none focus:ring-2 focus:ring-primary">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <i class="ph ph-magnifying-glass text-grayText"></i>
+                    </div>
+                </div>
+                
+                <div class="relative flex-grow">
+                    <select id="filterRole" class="bg-darkPanel border border-darkBorder rounded-lg px-4 py-2 pr-10 appearance-none focus:outline-none focus:ring-2 focus:ring-primary w-full">
+                        <option value="">Todas as funções</option>
+                        <option value="Gerente de Projetos">Gerente de Projetos</option>
+                        <option value="Desenvolvedor">Desenvolvedor</option>
+                        <option value="Designer">Designer</option>
+                        <option value="Analista">Analista</option>
+                        <option value="Engenheiro">Engenheiro</option>
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <i class="ph ph-caret-down text-grayText"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex gap-4 w-full sm:w-auto">
+                <button id="newMemberBtn" class="bg-primary hover:bg-purple-700 rounded-lg px-4 py-2 flex items-center transition-colors">
+                    <i class="ph ph-user-plus mr-2"></i>
+                    <span>Adicionar Membro</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Visualização de membros -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="team-members-container">
+            <!-- Membros serão adicionados via JavaScript -->
+            <div class="member-placeholder text-center text-grayText p-8">
+                <i class="ph ph-users text-5xl mb-4"></i>
+                <p>Carregando membros da equipe...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de novo membro -->
+    <div id="newMemberModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-darkPanel border border-darkBorder rounded-lg w-full max-w-lg p-6">
+            <!-- Cabeçalho do modal -->
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold">Adicionar Membro</h3>
+                <button type="button" class="close-modal text-gray-400 hover:text-white" data-modal="newMemberModal">
+                    <i class="ph ph-x text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Formulário -->
+            <form id="newMemberForm">
+                <div class="space-y-4">
+                    <div>
+                        <label for="memberName" class="block mb-1">Nome Completo</label>
+                        <input type="text" id="memberName" name="name" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary" required autocomplete="off">
+                    </div>
+                    
+                    <div>
+                        <label for="memberEmail" class="block mb-1">Email</label>
+                        <input type="email" id="memberEmail" name="email" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary" required autocomplete="off">
+                    </div>
+                    
+                    <div>
+                        <label for="memberRole" class="block mb-1">Função</label>
+                        <select id="memberRole" name="role" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary" required>
+                            <option value="">Selecione uma função</option>
+                            <option value="Gerente de Projetos">Gerente de Projetos</option>
+                            <option value="Desenvolvedor Front-end">Desenvolvedor Front-end</option>
+                            <option value="Desenvolvedor Back-end">Desenvolvedor Back-end</option>
+                            <option value="Designer UX/UI">Designer UX/UI</option>
+                            <option value="Analista de QA">Analista de QA</option>
+                            <option value="Engenheiro Civil">Engenheiro Civil</option>
+                            <option value="Arquiteto">Arquiteto</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="memberPhone" class="block mb-1">Telefone</label>
+                        <input type="tel" id="memberPhone" name="phone" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary" autocomplete="off">
+                    </div>
+                    
+                    <div>
+                        <label for="memberDepartment" class="block mb-1">Departamento</label>
+                        <select id="memberDepartment" name="department" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="">Selecione um departamento</option>
+                            <option value="Desenvolvimento">Desenvolvimento</option>
+                            <option value="Design">Design</option>
+                            <option value="Gerência">Gerência</option>
+                            <option value="Qualidade">Qualidade</option>
+                            <option value="Engenharia">Engenharia</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Botões -->
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" class="cancel-modal px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors" data-modal="newMemberModal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-primary hover:bg-purple-700 rounded-lg transition-colors">
+                        Adicionar Membro
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de detalhes do membro -->
+    <div id="memberDetailsModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-darkPanel border border-darkBorder rounded-lg w-full max-w-lg p-6">
+            <!-- Cabeçalho do modal -->
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="memberDetailsTitle" class="text-xl font-semibold">Detalhes do Membro</h3>
+                <button type="button" class="close-modal text-gray-400 hover:text-white" data-modal="memberDetailsModal">
+                    <i class="ph ph-x text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Conteúdo -->
+            <div id="memberDetailsContent" class="space-y-4">
+                <!-- Conteúdo será preenchido via JavaScript -->
+            </div>
+            
+            <!-- Botões -->
+            <div class="flex justify-between mt-6">
+                <div>
+                    <button id="deleteMemberBtn" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
+                        <i class="ph ph-trash mr-1"></i> Excluir
+                    </button>
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" class="close-modal px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors" data-modal="memberDetailsModal">
+                        Fechar
+                    </button>
+                    <button id="editMemberBtn" class="px-4 py-2 bg-primary hover:bg-purple-700 rounded-lg transition-colors">
+                        <i class="ph ph-pencil-simple mr-1"></i> Editar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de edição de membro -->
+    <div id="editMemberModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-darkPanel border border-darkBorder rounded-lg w-full max-w-lg p-6">
+            <!-- Cabeçalho do modal -->
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold">Editar Membro</h3>
+                <button type="button" class="close-modal text-gray-400 hover:text-white" data-modal="editMemberModal">
+                    <i class="ph ph-x text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Formulário -->
+            <form id="editMemberForm">
+                <input type="hidden" id="editMemberId" name="id">
+                <div class="space-y-4">
+                    <div>
+                        <label for="editMemberName" class="block mb-1">Nome Completo</label>
+                        <input type="text" id="editMemberName" name="name" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary" required autocomplete="off">
+                    </div>
+                    
+                    <div>
+                        <label for="editMemberEmail" class="block mb-1">Email</label>
+                        <input type="email" id="editMemberEmail" name="email" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary" required autocomplete="off">
+                    </div>
+                    
+                    <div>
+                        <label for="editMemberRole" class="block mb-1">Função</label>
+                        <select id="editMemberRole" name="role" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary" required>
+                            <option value="">Selecione uma função</option>
+                            <option value="Gerente de Projetos">Gerente de Projetos</option>
+                            <option value="Desenvolvedor Front-end">Desenvolvedor Front-end</option>
+                            <option value="Desenvolvedor Back-end">Desenvolvedor Back-end</option>
+                            <option value="Designer UX/UI">Designer UX/UI</option>
+                            <option value="Analista de QA">Analista de QA</option>
+                            <option value="Engenheiro Civil">Engenheiro Civil</option>
+                            <option value="Arquiteto">Arquiteto</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="editMemberPhone" class="block mb-1">Telefone</label>
+                        <input type="tel" id="editMemberPhone" name="phone" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary" autocomplete="off">
+                    </div>
+                    
+                    <div>
+                        <label for="editMemberDepartment" class="block mb-1">Departamento</label>
+                        <select id="editMemberDepartment" name="department" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="">Selecione um departamento</option>
+                            <option value="Desenvolvimento">Desenvolvimento</option>
+                            <option value="Design">Design</option>
+                            <option value="Gerência">Gerência</option>
+                            <option value="Qualidade">Qualidade</option>
+                            <option value="Engenharia">Engenharia</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Botões -->
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" class="cancel-modal px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors" data-modal="editMemberModal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-primary hover:bg-purple-700 rounded-lg transition-colors">
+                        Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="init-data.js"></script>
+    <script src="api-mock.js"></script>
+    <script src="auth.js"></script>
+    <script src="theme.js"></script>
+    <script src="sidebar.js"></script>
+    <script src="team.js"></script>
+
+    <!-- Inicializar a página -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof initTeam === 'function') {
+                initTeam();
+            } else {
+                console.error('A função initTeam não está definida');
+            }
+        });
+    </script>
+</body>
+</html>

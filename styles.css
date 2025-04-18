@@ -48,13 +48,73 @@
 .sidebar-item {
     display: flex;
     align-items: center;
-    padding: 0.5rem;
+    padding: 0.75rem;
     border-radius: 0.5rem;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
 }
 
 .sidebar span.hidden {
     display: none;
+}
+
+/* Estilos para cards de projetos */
+.project-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.project-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Animações */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease forwards;
+}
+
+/* Estilos para modais */
+.modal {
+    transition: opacity 0.3s ease;
+}
+
+.modal:not(.hidden) {
+    animation: fadeIn 0.3s ease forwards;
+}
+
+/* Estilos para status */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Estilos para inputs */
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(128, 90, 213, 0.5);
+}
+
+/* Estilos para responsividade */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 3.5rem;
+    }
+    
+    .sidebar.expanded {
+        width: 14rem;
+    }
+    
+    .ml-16 {
+        margin-left: 3.5rem;
+    }
 }
 
 /* Estilos para os status dos projetos */

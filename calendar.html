@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendário - ConstructFlow</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/fill/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.0.3/src/regular/style.css">
+</head>
+<body class="bg-darkBg text-white">
+    <!-- Barra lateral -->
+    <div class="sidebar fixed left-0 top-0 h-full bg-darkPanel border-r border-darkBorder p-4 flex flex-col z-10">
+        <!-- Logo -->
+        <div class="flex items-center justify-center mb-8">
+            <span class="text-2xl font-bold text-primary">CF</span>
+        </div>
+        
+        <!-- Itens do menu -->
+        <div class="flex-1 space-y-2">
+            <a href="index.html" class="sidebar-item text-grayText hover:bg-gray-800 hover:text-white">
+                <i class="ph ph-house text-xl"></i>
+                <span class="ml-3 hidden">Dashboard</span>
+            </a>
+            <a href="backlog.html" class="sidebar-item text-grayText hover:bg-gray-800 hover:text-white">
+                <i class="ph ph-list-checks text-xl"></i>
+                <span class="ml-3 hidden">Backlog</span>
+            </a>
+            <a href="calendar.html" class="sidebar-item bg-gray-800 text-white">
+                <i class="ph ph-calendar text-xl"></i>
+                <span class="ml-3 hidden">Calendário</span>
+            </a>
+            <a href="tasks.html" class="sidebar-item text-grayText hover:bg-gray-800 hover:text-white">
+                <i class="ph ph-check-square text-xl"></i>
+                <span class="ml-3 hidden">Tarefas</span>
+            </a>
+            <a href="team.html" class="sidebar-item text-grayText hover:bg-gray-800 hover:text-white">
+                <i class="ph ph-users text-xl"></i>
+                <span class="ml-3 hidden">Equipe</span>
+            </a>
+            <a href="reports.html" class="sidebar-item text-grayText hover:bg-gray-800 hover:text-white">
+                <i class="ph ph-chart-line text-xl"></i>
+                <span class="ml-3 hidden">Relatórios</span>
+            </a>
+        </div>
+        
+        <!-- Configurações -->
+        <div>
+            <a href="settings.html" class="sidebar-item text-grayText hover:bg-gray-800 hover:text-white">
+                <i class="ph ph-gear text-xl"></i>
+                <span class="ml-3 hidden">Configurações</span>
+            </a>
+            <button id="logoutButton" class="sidebar-item text-grayText hover:bg-gray-800 hover:text-white w-full text-left">
+                <i class="ph ph-sign-out text-xl"></i>
+                <span class="ml-3 hidden">Sair</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Conteúdo principal -->
+    <div class="ml-16 p-6">
+        <!-- Cabeçalho -->
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-2xl font-bold">Calendário</h1>
+                <p id="current-date" class="text-grayText">Segunda-feira, 1 de janeiro de 2023</p>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="toggleDarkMode" class="text-grayText hover:text-white">
+                    <i class="ph ph-moon"></i>
+                </button>
+                <div class="relative">
+                    <button class="text-grayText hover:text-white">
+                        <i class="ph ph-bell text-xl"></i>
+                    </button>
+                </div>
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center mr-2">
+                        <span id="userInitials">CO</span>
+                    </div>
+                    <div class="hidden md:block">
+                        <span id="userName" class="block font-medium">Carlos Oliveira</span>
+                        <span id="userRole" class="text-sm text-grayText">Gerente de Projetos</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Controles do calendário -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+            <div class="flex items-center gap-4">
+                <button id="prevMonth" class="bg-darkPanel hover:bg-gray-700 rounded-lg p-2">
+                    <i class="ph ph-caret-left text-xl"></i>
+                </button>
+                <h2 id="currentMonth" class="text-xl font-medium">Janeiro 2023</h2>
+                <button id="nextMonth" class="bg-darkPanel hover:bg-gray-700 rounded-lg p-2">
+                    <i class="ph ph-caret-right text-xl"></i>
+                </button>
+                <button id="todayBtn" class="bg-darkPanel hover:bg-gray-700 rounded-lg px-4 py-2 ml-2">
+                    Hoje
+                </button>
+            </div>
+            
+            <div class="flex gap-4">
+                <div class="relative">
+                    <select id="filterProject" class="bg-darkPanel border border-darkBorder rounded-lg px-4 py-2 pr-10 appearance-none focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="">Todos os projetos</option>
+                        <!-- Opções serão adicionadas via JavaScript -->
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <i class="ph ph-caret-down text-grayText"></i>
+                    </div>
+                </div>
+                
+                <button id="newEventBtn" class="bg-primary hover:bg-purple-700 rounded-lg px-4 py-2 flex items-center transition-colors">
+                    <i class="ph ph-plus mr-2"></i>
+                    <span>Novo Evento</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Visualização do calendário -->
+        <div class="bg-darkPanel border border-darkBorder rounded-lg overflow-hidden">
+            <!-- Dias da semana -->
+            <div class="grid grid-cols-7 text-center py-2 border-b border-darkBorder">
+                <div class="text-grayText">Dom</div>
+                <div class="text-grayText">Seg</div>
+                <div class="text-grayText">Ter</div>
+                <div class="text-grayText">Qua</div>
+                <div class="text-grayText">Qui</div>
+                <div class="text-grayText">Sex</div>
+                <div class="text-grayText">Sáb</div>
+            </div>
+            
+            <!-- Grade do calendário -->
+            <div id="calendarGrid" class="grid grid-cols-7 min-h-[600px]">
+                <!-- Dias serão adicionados via JavaScript -->
+                <div class="calendar-placeholder text-center text-grayText p-8 col-span-7 flex items-center justify-center">
+                    <div>
+                        <i class="ph ph-calendar text-5xl mb-4"></i>
+                        <p>Carregando calendário...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de novo evento -->
+    <div id="newEventModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-darkPanel border border-darkBorder rounded-lg w-full max-w-lg p-6">
+            <!-- Cabeçalho do modal -->
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold">Novo Evento</h3>
+                <button type="button" class="close-modal text-gray-400 hover:text-white" data-modal="newEventModal">
+                    <i class="ph ph-x text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Formulário -->
+            <form id="newEventForm">
+                <div class="space-y-4">
+                    <div>
+                        <label for="eventTitle" class="block mb-1">Título</label>
+                        <input type="text" id="eventTitle" name="title" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary" required autocomplete="off">
+                    </div>
+                    
+                    <div>
+                        <label for="eventDescription" class="block mb-1">Descrição</label>
+                        <textarea id="eventDescription" name="description" rows="3" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="eventDate" class="block mb-1">Data</label>
+                            <input type="date" id="eventDate" name="date" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary" required>
+                        </div>
+                        <div>
+                            <label for="eventTime" class="block mb-1">Hora</label>
+                            <input type="time" id="eventTime" name="time" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="eventProject" class="block mb-1">Projeto</label>
+                        <select id="eventProject" name="project" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="">Selecione um projeto</option>
+                            <!-- Opções serão adicionadas via JavaScript -->
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="eventType" class="block mb-1">Tipo</label>
+                        <select id="eventType" name="type" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="meeting">Reunião</option>
+                            <option value="deadline">Prazo</option>
+                            <option value="milestone">Marco</option>
+                            <option value="other">Outro</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Botões -->
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" class="cancel-modal px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors" data-modal="newEventModal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-primary hover:bg-purple-700 rounded-lg transition-colors">
+                        Adicionar Evento
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de detalhes do evento -->
+    <div id="eventDetailsModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-darkPanel border border-darkBorder rounded-lg w-full max-w-lg p-6">
+            <!-- Cabeçalho do modal -->
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="eventDetailsTitle" class="text-xl font-semibold">Detalhes do Evento</h3>
+                <button type="button" class="close-modal text-gray-400 hover:text-white" data-modal="eventDetailsModal">
+                    <i class="ph ph-x text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Conteúdo -->
+            <div id="eventDetailsContent" class="space-y-4">
+                <!-- Conteúdo será preenchido via JavaScript -->
+            </div>
+            
+            <!-- Botões -->
+            <div class="flex justify-between mt-6">
+                <div>
+                    <button id="deleteEventBtn" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
+                        <i class="ph ph-trash mr-1"></i> Excluir
+                    </button>
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" class="close-modal px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors" data-modal="eventDetailsModal">
+                        Fechar
+                    </button>
+                    <button id="editEventBtn" class="px-4 py-2 bg-primary hover:bg-purple-700 rounded-lg transition-colors">
+                        <i class="ph ph-pencil-simple mr-1"></i> Editar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de edição de evento -->
+    <div id="editEventModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-darkPanel border border-darkBorder rounded-lg w-full max-w-lg p-6">
+            <!-- Cabeçalho do modal -->
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold">Editar Evento</h3>
+                <button type="button" class="close-modal text-gray-400 hover:text-white" data-modal="editEventModal">
+                    <i class="ph ph-x text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Formulário -->
+            <form id="editEventForm">
+                <input type="hidden" id="editEventId" name="id">
+                <div class="space-y-4">
+                    <div>
+                        <label for="editEventTitle" class="block mb-1">Título</label>
+                        <input type="text" id="editEventTitle" name="title" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary" required autocomplete="off">
+                    </div>
+                    
+                    <div>
+                        <label for="editEventDescription" class="block mb-1">Descrição</label>
+                        <textarea id="editEventDescription" name="description" rows="3" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary"></textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="editEventDate" class="block mb-1">Data</label>
+                            <input type="date" id="editEventDate" name="date" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary" required>
+                        </div>
+                        <div>
+                            <label for="editEventTime" class="block mb-1">Hora</label>
+                            <input type="time" id="editEventTime" name="time" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="editEventProject" class="block mb-1">Projeto</label>
+                        <select id="editEventProject" name="project" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="">Selecione um projeto</option>
+                            <!-- Opções serão adicionadas via JavaScript -->
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label for="editEventType" class="block mb-1">Tipo</label>
+                        <select id="editEventType" name="type" class="bg-darkBg border border-darkBorder rounded-lg px-4 py-2 w-full focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="meeting">Reunião</option>
+                            <option value="deadline">Prazo</option>
+                            <option value="milestone">Marco</option>
+                            <option value="other">Outro</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Botões -->
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" class="cancel-modal px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors" data-modal="editEventModal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-primary hover:bg-purple-700 rounded-lg transition-colors">
+                        Salvar Alterações
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="init-data.js"></script>
+    <script src="api-mock.js"></script>
+    <script src="auth.js"></script>
+    <script src="theme.js"></script>
+    <script src="sidebar.js"></script>
+    <script src="calendar.js"></script>
+
+    <!-- Inicializar a página -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof initCalendar === 'function') {
+                initCalendar();
+            } else {
+                console.error('A função initCalendar não está definida');
+            }
+        });
+    </script>
+</body>
+</html>
